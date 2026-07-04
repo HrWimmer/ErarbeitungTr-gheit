@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physik 8: Kräftegleichgewicht & Trägheitssatz</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            physics: {
+              50: '#f5f7ff',
+              100: '#ebf0ff',
+              200: '#d6e0ff',
+              500: '#3b82f6', // Primary Accent
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- MathJax Configuration -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+  </script>
+  <!-- MathJax JS -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col md:flex-row animate-fadeIn">
+
+  <!-- ================= SIDEBAR NAVIGATION ================= -->
+  <aside class="w-full md:w-80 bg-slate-900 text-slate-100 flex flex-col justify-between p-6 shadow-xl z-10 shrink-0">
+    <div>
+      <!-- Header -->
+      <div class="flex items-center space-x-3 mb-8">
+        <div class="p-2.5 bg-physics-600 rounded-xl text-white shadow-lg shadow-physics-500/30">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Physik Klasse 8</h1>
+          <p class="text-xs text-slate-400">Kräftegleichgewicht & Trägheit</p>
+        </div>
+      </div>
+
+      <!-- Progress Card -->
+      <div class="bg-slate-800 rounded-2xl p-4 mb-6 border border-slate-700">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-semibold text-slate-300">Dein Fortschritt</span>
+          <span id="progress-percent" class="text-xs font-bold text-physics-400">0%</span>
+        </div>
+        <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+          <div id="progress-bar" class="bg-physics-500 h-full w-0 transition-all duration-500"></div>
+        </div>
+        <p id="progress-text" class="text-[11px] text-slate-400 mt-2">0 von 7 Stationen abgeschlossen</p>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="space-y-1.5" id="sidebar-nav">
+        <!-- Will be dynamically populated via JS -->
+      </nav>
+    </div>
+
+    <!-- Sidebar Footer & Teacher Mode Toggle -->
+    <div class="mt-8 pt-4 border-t border-slate-800 space-y-4">
+      <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/50">
+        <div class="flex flex-col">
+          <span class="text-xs font-semibold text-slate-300">Lehrer-Modus</span>
+          <span class="text-[10px] text-slate-500">Lösungen anzeigen</span>
+        </div>
+        <button id="teacher-mode-btn" onclick="toggleTeacherMode()" class="w-11 h-6 bg-slate-700 rounded-full relative transition-colors duration-300 focus:outline-none">
+          <span id="teacher-mode-dot" class="absolute top-1 left-1 bg-slate-400 w-4 h-4 rounded-full transition-transform duration-300"></span>
+        </button>
+      </div>
+      <div class="text-[10px] text-slate-500 text-center">
+        Interaktives Physik-Portal &copy; 2026
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CONTENT AREA ================= -->
+  <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+    
+    <!-- Top Header Bar -->
+    <header class="bg-white border-b border-slate-200 py-4 px-8 flex justify-between items-center shrink-0">
+      <div class="flex items-center space-x-2">
+        <span class="text-xs bg-physics-100 text-physics-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" id="current-badge">Station 1</span>
+        <h2 class="text-slate-800 font-bold text-lg" id="current-station-title">Motivation: Das ungesicherte Paket</h2>
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="prevStep()" id="btn-prev" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition flex items-center gap-1">
+          &larr; Zurück
+        </button>
+        <button onclick="nextStep()" id="btn-next" class="px-4 py-1.5 bg-physics-600 hover:bg-physics-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-1">
+          Weiter &rarr;
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Content Container -->
+    <div class="flex-1 p-6 md:p-8 max-w-5xl w-full mx-auto space-y-8 animate-fadeIn" id="content-container">
+
+      <!-- ================= STATION 1: MOTIVATION (SVG Vektorgrafik & Verstanden Button) ================= -->
+      <section id="station-1" class="station-card bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div class="space-y-4">
+            <h3 class="text-2xl font-bold text-slate-900">Das ungesicherte Paket im Bremsvorgang</h3>
+            <p class="text-slate-600 leading-relaxed text-sm">
+              Stell dir vor: Ein schweres Holzpaket liegt völlig lose auf der glatten Ladefläche eines LKW. Der LKW fährt mit einer konstanten, gemütlichen Geschwindigkeit von $50\text{ km/h}$ geradeaus. 
+            </p>
+            <p class="text-slate-600 leading-relaxed text-sm">
+              Plötzlich taucht ein Hindernis auf und der Fahrer bremst abrupt ab! Der LKW verzögert extrem stark. 
+              <strong>Was passiert mit dem ungesicherten Paket?</strong> Es rutscht unaufhaltsam nach vorne und prallt mit Wucht gegen das Fahrerhaus.
+            </p>
+            <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl">
+              <h4 class="font-bold text-blue-950 text-xs mb-1 uppercase tracking-wide">Physikalischer Clou: Trägheit & Kräftegleichgewicht</h4>
+              <p class="text-xs text-blue-900 leading-relaxed">
+                Viele glauben, das Paket werde aktiv nach vorne <span class="underline">geschoben</span>. <strong>Das ist falsch!</strong> 
+              </p>
+              <p class="text-xs text-blue-800 mt-2">
+                Betrachten wir das Ganze von der Straße aus: Auf den LKW wirkt eine enorme Bremskraft nach hinten (er ist *nicht* im Gleichgewicht, er verzögert). Auf das lose Paket wirkt horizontal dagegen *keine* ausreichende Kraft, um es mitzubremsen. Das Paket befindet sich in horizontaler Richtung nahezu im **Kräftegleichgewicht** ($\Sigma \vec{F} = 0$) und behält nach dem **Trägheitssatz** seine konstante Bewegung einfach bei, während der LKW unter ihm weggebremst wird!
+              </p>
+            </div>
+          </div>
+
+          <!-- SVG Illustration -->
+          <div class="bg-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center border border-slate-200">
+            <span class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Physikalische Momentaufnahme</span>
+            <svg viewBox="0 0 400 250" class="w-full max-w-sm h-auto drop-shadow-md">
+              <!-- Boden -->
+              <line x1="10" y1="200" x2="390" y2="200" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+              <line x1="10" y1="205" x2="390" y2="205" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5,5"/>
+
+              <!-- LKW -->
+              <g id="svg-lkw" transform="translate(10, 0)">
+                <!-- Kabine -->
+                <path d="M 220 120 L 270 120 L 290 150 L 290 190 L 210 190 Z" fill="#3b82f6"/>
+                <!-- Fenster -->
+                <path d="M 245 130 L 265 130 L 275 150 L 245 150 Z" fill="#93c5fd"/>
+                <!-- Ladefläche -->
+                <rect x="60" y="150" width="150" height="40" fill="#475569" rx="2"/>
+                <!-- Räder -->
+                <circle cx="100" cy="195" r="14" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+                <circle cx="180" cy="195" r="14" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+                <circle cx="260" cy="195" r="14" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+                
+                <!-- Paket (rutscht nach vorne) -->
+                <rect x="110" y="115" width="40" height="35" fill="#d97706" rx="3" stroke="#b45309" stroke-width="2"/>
+                <line x1="110" y1="115" x2="150" y2="150" stroke="#b45309" stroke-width="1"/>
+                <line x1="150" y1="115" x2="110" y2="150" stroke="#b45309" stroke-width="1"/>
+                
+                <!-- Kraftpfeile am LKW (Bremskraft) -->
+                <path d="M 260 195 L 210 195" stroke="#ef4444" stroke-width="3" marker-end="url(#arrow-red)"/>
+                <text x="175" y="215" fill="#ef4444" font-size="10" font-weight="bold">F_Bremse (Gegenkraft)</text>
+                
+                <!-- Geschwindigkeit des Pakets (Trägheit) -->
+                <path d="M 130 95 L 180 95" stroke="#10b981" stroke-width="3" marker-end="url(#arrow-green)"/>
+                <text x="120" y="85" fill="#10b981" font-size="10" font-weight="bold">v_Paket (konstant!)</text>
+
+                <!-- Zu schwache Reibungskraft -->
+                <path d="M 130 152 L 115 152" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)"/>
+                <text x="80" y="170" fill="#f97316" font-size="9" font-weight="bold">F_Reibung (zu schwach)</text>
+              </g>
+
+              <!-- Markers -->
+              <defs>
+                <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
+                </marker>
+                <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                </marker>
+                <marker id="arrow-orange" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316" />
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 space-y-3">
+          <h4 class="font-bold text-blue-950 text-base">Der physikalische Kernpunkt:</h4>
+          <p class="text-sm text-blue-900 leading-relaxed">
+            Damit das Paket gemeinsam mit dem LKW langsamer werden kann, muss eine bremsende Kraft auf das Paket ausgeübt werden. Diese Kraft kann im Alltag ausschließlich über die <strong>Haftreibung</strong> zwischen der Ladefläche und der Unterseite des Pakets übertragen werden.
+          </p>
+          <p class="text-sm text-blue-900 leading-relaxed">
+            Haftreibung hat jedoch eine feste physikalische Obergrenze ($F_{\text{Reib, max}}$). Wird der LKW zu abrupt gebremst, reicht die maximal übertragbare Reibungskraft nicht aus, um das Paket synchron mitzuverzögern. Da auf das Paket horizontal keine ausreichende Nettokraft wirkt, bleibt es in seinem Zustand der gleichförmigen Bewegung – es behält seine Geschwindigkeit einfach bei.
+          </p>
+        </div>
+
+        <!-- Verification Button -->
+        <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100">
+          <span class="text-xs text-slate-500 font-medium">Lies dir die Erklärung aufmerksam durch und bestätige dein Verständnis.</span>
+          <button id="btn-complete-s1" onclick="completeStation1()" class="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
+            <span>✓ Gelesen & Verstanden!</span>
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ================= STATION 2: HAUPT-SIMULATION (Mit vorbeiziehendem Background!) ================= -->
+      <section id="station-2" class="station-card hidden bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-6">
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-slate-900">Interaktives Experimentierlabor</h3>
+          <p class="text-slate-600 text-sm">
+            Verändere die Parameter und beobachte live im Telemetrie-Fenster, wann die Haftgrenze überschritten wird und das Paket relativ zur Ladefläche ins Rutschen gerät. 
+            <strong>Die Kräftepfeile bleiben nach dem Stoppen eingefroren, damit du sie ganz entspannt ablesen kannst!</strong>
+          </p>
+        </div>
+
+        <!-- Simulation UI: Canvas & Controls Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          
+          <!-- Canvas Area -->
+          <div class="xl:col-span-2 flex flex-col space-y-2">
+            <div class="bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800 shadow-inner">
+              <canvas id="sim-canvas" width="600" height="220" class="w-full block"></canvas>
+              <!-- Live HUD Badge -->
+              <div class="absolute top-4 left-4 bg-slate-900/80 backdrop-blur border border-slate-700/50 px-3 py-1.5 rounded-xl text-xs font-mono text-emerald-400 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>TELEMETRIE LIVE</span>
+              </div>
+            </div>
+            
+            <!-- Simulation Controls -->
+            <div class="flex gap-2">
+              <button onclick="startBrakeSim()" id="btn-brake-action" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all hover:scale-[1.02]">
+                🔴 VOLLBREMSUNG AUSLÖSEN!
+              </button>
+              <button onclick="resetBrakeSim()" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition">
+                🔄 Zurücksetzen
+              </button>
+            </div>
+          </div>
+
+          <!-- Parameter Controls Sidebar -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4">
+            <div class="space-y-4">
+              <h4 class="font-bold text-slate-900 text-sm uppercase tracking-wider border-b pb-2">Parameter einstellen</h4>
+              
+              <!-- Slider 1: Paketmasse -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-slate-600">Masse des Pakets ($m$):</span>
+                  <span class="text-physics-600 font-mono" id="val-mass">10 kg</span>
+                </div>
+                <input type="range" id="slider-mass" min="2" max="25" value="10" step="1" oninput="updateSimParams()" class="w-full accent-physics-600">
+              </div>
+
+              <!-- Slider 2: LKW Verzögerung -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-slate-600">Bremsstärke / Verzögerung ($a$):</span>
+                  <span class="text-red-600 font-mono" id="val-accel">4.0 m/s²</span>
+                </div>
+                <input type="range" id="slider-accel" min="1" max="10" value="4" step="0.5" oninput="updateSimParams()" class="w-full accent-red-600">
+              </div>
+
+              <!-- Slider 3: Max. Reibungskraft -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-slate-600">Max. Reibungskraft ($F_{\text{Reib, max}}$):</span>
+                  <span class="text-amber-600 font-mono" id="val-friction">45 N</span>
+                </div>
+                <input type="range" id="slider-friction" min="10" max="80" value="45" step="5" oninput="updateSimParams()" class="w-full accent-amber-500">
+              </div>
+            </div>
+
+            <!-- Physics Legend (Live) -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-500 font-medium">Erforderliche Kraft zum Bremsen ($F_{\text{erf}} = m \cdot a$):</span>
+                <span class="font-bold font-mono" id="hud-force-needed">40.0 N</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 font-medium">Maximal wirkende Haltekraft ($F_{\text{Reib, max}}$):</span>
+                <span class="font-bold font-mono" id="hud-force-holding">45.0 N</span>
+              </div>
+              <div class="h-px bg-slate-100 my-1"></div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-600 font-semibold">Zustand:</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" id="hud-status-badge">SICHER</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs text-blue-950 leading-relaxed">
+          💡 **Tipp zum Ausprobieren:** Versuche herauszufinden, warum schwere Pakete bei gleicher Bremsbeschleunigung eine viel größere Haltekraft benötigen, um nicht zu rutschen. Setzt sich das Paket erst einmal in Bewegung, verharrt es trägheitsbedingt in seinem schnellen Bewegungszustand!
+        </div>
+      </section>
+
+
+      <!-- ================= STATION 3: AUFGABE 1 (Qualitativer Logik- & Argumentations-Check mit Einzelprüfung) ================= -->
+      <section id="station-3" class="station-card hidden bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-6">
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-slate-900">Aufgabe 1: Physikalischer Logik- & Argumentations-Check</h3>
+          <p class="text-slate-600 text-sm">
+            Beweise, dass du die physikalische Logik hinter dem Kräftegleichgewicht und dem Bremsvorgang verstanden hast. <strong>Du kannst jede Frage einzeln beantworten und direkt überprüfen lassen!</strong>
+          </p>
+        </div>
+
+        <div class="space-y-8" id="logik-tasks-container">
+          <!-- Questions will be built with dedicated individual check buttons -->
+          
+          <!-- Frage 1 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 transition" id="q1-block">
+            <div class="flex justify-between items-center">
+              <span class="text-xs bg-physics-200 text-physics-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Frage 1</span>
+              <span id="q1-status" class="text-xs font-bold text-slate-400">Offen ⭕</span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">Warum fängt das Paket auf der Ladefläche erst ab einer ganz bestimmten Bremsstärke an zu rutschen?</h4>
+            <div class="grid grid-cols-1 gap-2" id="q1-choices">
+              <!-- Choices via JS -->
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-2 border-t border-slate-200/60">
+              <span id="q1-feedback" class="text-xs font-medium text-slate-500">Wähle eine Option und klicke auf Prüfen.</span>
+              <button onclick="checkIndividualQuestion(1)" class="w-full sm:w-auto px-4 py-2 bg-physics-600 hover:bg-physics-700 text-white font-bold rounded-lg text-xs transition">
+                Frage 1 prüfen
+              </button>
+            </div>
+          </div>
+
+          <!-- Frage 2 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 transition" id="q2-block">
+            <div class="flex justify-between items-center">
+              <span class="text-xs bg-physics-200 text-physics-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Frage 2</span>
+              <span id="q2-status" class="text-xs font-bold text-slate-400">Offen ⭕</span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">Was passiert mit der Bewegung des ungesicherten Pakets im exakten Moment einer Vollbremsung aus Sicht eines am Straßenrand stehenden Beobachters?</h4>
+            <div class="grid grid-cols-1 gap-2" id="q2-choices">
+              <!-- Choices via JS -->
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-2 border-t border-slate-200/60">
+              <span id="q2-feedback" class="text-xs font-medium text-slate-500">Wähle eine Option und klicke auf Prüfen.</span>
+              <button onclick="checkIndividualQuestion(2)" class="w-full sm:w-auto px-4 py-2 bg-physics-600 hover:bg-physics-700 text-white font-bold rounded-lg text-xs transition">
+                Frage 2 prüfen
+              </button>
+            </div>
+          </div>
+
+          <!-- Frage 3 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 transition" id="q3-block">
+            <div class="flex justify-between items-center">
+              <span class="text-xs bg-physics-200 text-physics-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Frage 3</span>
+              <span id="q3-status" class="text-xs font-bold text-slate-400">Offen ⭕</span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">Wie lässt sich das Rutschen des Pakets wissenschaftlich am präzisesten begründen?</h4>
+            <div class="grid grid-cols-1 gap-2" id="q3-choices">
+              <!-- Choices via JS -->
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-2 border-t border-slate-200/60">
+              <span id="q3-feedback" class="text-xs font-medium text-slate-500">Wähle eine Option und klicke auf Prüfen.</span>
+              <button onclick="checkIndividualQuestion(3)" class="w-full sm:w-auto px-4 py-2 bg-physics-600 hover:bg-physics-700 text-white font-bold rounded-lg text-xs transition">
+                Frage 3 prüfen
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="t1-station-global-feedback" class="hidden p-4 rounded-xl border font-bold text-sm text-center"></div>
+      </section>
+
+
+      <!-- ================= STATION 4: AUFGABE 2 (Lückentext mit distraktivem Wortpool) ================= -->
+      <section id="station-4" class="station-card hidden bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-6">
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-slate-900">Aufgabe 2: Der Trägheitssatz im Detail</h3>
+          <p class="text-slate-600 text-sm">
+            Vervollständige die physikalische Erklärung des rutschenden Pakets. Wähle aus dem gemeinsamen Wortpool die physikalisch treffendsten Begriffe aus. **Achtung: Es sind viele ablenkende Begriffe (Distraktoren) dabei!**
+          </p>
+        </div>
+
+        <!-- Wortspeicher Card -->
+        <div class="bg-slate-100 border border-slate-200 p-4 rounded-xl space-y-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Gemeinsamer Wortpool (Wortspeicher):</span>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Fahrzeug</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Paket</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Reibungskraft</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Gewichtskraft</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Trägheitskraft</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Wechselwirkungsprinzip</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Kräftegleichgewicht</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">vorne</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">hinten</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Trägheitssatz</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">gleichförmigen</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">beschleunigten</span>
+            <span class="px-2.5 py-1 bg-white border rounded-lg text-xs font-semibold text-slate-700 shadow-sm">Luftwiderstand</span>
+          </div>
+        </div>
+
+        <!-- Lückentext Card -->
+        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 leading-relaxed text-slate-700 space-y-6 text-base">
+          <div>
+            Wenn ein LKW abrupt abbremst, wirkt die verzögernde Bremskraft der Straße direkt auf das 
+            <select id="t2-g1" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-physics-500 font-bold text-slate-800 text-sm">
+              <!-- Dynamically populated via JS with distractors -->
+            </select>.
+            Auf das lose liegende Paket auf der Ladefläche wirkt im ersten Moment keine bremsende Kraft, außer der 
+            <select id="t2-g2" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-physics-500 font-bold text-slate-800 text-sm">
+            </select>
+            zwischen dem Paket und der Ladefläche.
+          </div>
+          <div>
+            Wenn die Reibungskraft zwischen Ladefläche und Paket jedoch zu klein ist, um die nötige Verzögerung aufzubringen, verharrt das Paket in horizontaler Richtung nahezu im 
+            <select id="t2-g3" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-physics-500 font-bold text-slate-800 text-sm">
+            </select> (die Summe der auf es wirkenden Kräfte ist fast null).
+            Während das Fahrzeug also stark verzögert wird, bewegt sich das Paket im Vergleich zum LKW weiter nach 
+            <select id="t2-g4" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-physics-500 font-bold text-slate-800 text-sm">
+            </select>.
+          </div>
+          <div>
+            Dieses Verhalten beschreibt der berühmte 
+            <select id="t2-g5" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-physics-500 font-bold text-slate-800 text-sm">
+            </select>
+            (auch 1. Newtonsches Axiom genannt). Er besagt, dass ein Körper in seinem Zustand der Ruhe oder der 
+            <select id="t2-g6" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-physics-500 font-bold text-slate-800 text-sm">
+            </select>
+            Bewegung verharrt, solange keine resultierende äußere Kraft auf ihn einwirkt.
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t">
+          <p id="t2-feedback" class="text-sm font-semibold text-slate-500">Überprüfe deine physikalischen Erklärungen einzeln.</p>
+          <button onclick="checkTask2()" class="w-full sm:w-auto px-6 py-2.5 bg-physics-600 hover:bg-physics-700 text-white font-bold rounded-xl transition">
+            Lückentext prüfen
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ================= STATION 5: AUFGABE 3 (Multi-Level Challenge) ================= -->
+      <section id="station-5" class="station-card hidden bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-6">
+        <div class="space-y-3">
+          <h3 class="text-xl font-bold text-slate-900">Aufgabe 3: Die Brems-Herausforderung (Reverse-Engineering)</h3>
+          <p class="text-slate-600 text-sm">
+            Meistere alle drei Level! Stelle die LKW-Verzögerung für jedes Level so scharf wie möglich ein, sodass das Paket <strong>gerade so nicht ins Rutschen gerät</strong> (Gleichgewichtsgrenze).
+          </p>
+        </div>
+
+        <!-- Level Selector Tabs -->
+        <div class="flex border-b border-slate-200">
+          <button onclick="switchChallengeLevel(1)" id="btn-lvl-1" class="flex-1 py-3 text-center border-b-2 border-physics-600 font-bold text-sm text-physics-600 transition focus:outline-none">
+            Level 1: Leichtes Paket
+          </button>
+          <button onclick="switchChallengeLevel(2)" id="btn-lvl-2" class="flex-1 py-3 text-center border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 transition focus:outline-none">
+            Level 2: Mittleres Paket
+          </button>
+          <button onclick="switchChallengeLevel(3)" id="btn-lvl-3" class="flex-1 py-3 text-center border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 transition focus:outline-none">
+            Level 3: Schweres Paket
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          
+          <!-- Missionsbriefing -->
+          <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-2xl shadow-md flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-xs bg-indigo-500 text-white px-2.5 py-1 rounded-full uppercase tracking-wider font-bold" id="challenge-badge">Level 1</span>
+                <span id="level-solved-indicator" class="text-xs font-bold text-emerald-400">Offen ⭕</span>
+              </div>
+              <h4 class="text-lg font-bold" id="challenge-title">Das ungesicherte Leichtgewicht</h4>
+              
+              <!-- Target Specs -->
+              <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-2">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-300">Masse $m$:</span>
+                  <span class="font-mono font-bold" id="c-target-mass">12 kg</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-300">Max. Reibungskraft $F_{\text{Reib, max}}$:</span>
+                  <span class="font-mono font-bold" id="c-target-friction">48 N</span>
+                </div>
+              </div>
+
+              <!-- Cheat-Mode Toggle for Stuck Users -->
+              <div class="pt-2">
+                <button id="btn-challenge-cheat" onclick="toggleChallengeCheat()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition border border-slate-700 flex items-center justify-center gap-1.5">
+                  <span id="cheat-icon">👁️</span> <span id="cheat-text">Spickzettel einblenden</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="pt-4 border-t border-slate-800">
+              <span class="text-xs text-slate-400 block mb-1">Dein Challenge-Status:</span>
+              <div class="flex space-x-1.5" id="challenge-dots">
+                <div id="dot-lvl-1" class="w-3.5 h-3.5 rounded-full bg-slate-700 flex items-center justify-center text-[8px] font-bold">1</div>
+                <div id="dot-lvl-2" class="w-3.5 h-3.5 rounded-full bg-slate-700 flex items-center justify-center text-[8px] font-bold">2</div>
+                <div id="dot-lvl-3" class="w-3.5 h-3.5 rounded-full bg-slate-700 flex items-center justify-center text-[8px] font-bold">3</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live-Test Controls inside simulation area -->
+          <div class="md:col-span-2 border border-slate-200 p-5 rounded-2xl bg-slate-50 flex flex-col justify-between">
+            <div class="space-y-4">
+              <h4 class="font-bold text-slate-800 text-sm">Fahr-Einstellungen für den Testlauf:</h4>
+              
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-slate-600">
+                  <span>Masse des Pakets (m):</span>
+                  <span class="font-mono" id="c-mass-label">12 kg (Gesperrt)</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2.5 rounded-lg overflow-hidden relative border">
+                  <div class="bg-indigo-500 h-full" id="c-mass-progress" style="width: 48%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-slate-600">
+                  <span>Verzögerung einstellen (a):</span>
+                  <span class="text-red-600 font-bold font-mono text-sm" id="c-val-accel">1.0 m/s²</span>
+                </div>
+                <input type="range" id="c-slider-accel" min="1" max="10" value="1" step="0.1" oninput="updateChallengeSlider()" class="w-full accent-red-600">
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-slate-600">
+                  <span>Reibungskraft der Ladefläche (Haftgrenze):</span>
+                  <span class="font-mono" id="c-friction-label">48 N (Gesperrt)</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2.5 rounded-lg overflow-hidden relative border">
+                  <div class="bg-amber-500 h-full" id="c-friction-progress" style="width: 60%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row gap-2 items-center">
+              <button onclick="runChallengeSim()" class="w-full sm:flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/10 transition">
+                🚀 Simulation testen & Verzögerung prüfen!
+              </button>
+              <div class="text-center sm:text-right px-3 py-1.5 bg-white rounded-lg border text-xs font-mono font-bold" id="challenge-telemetry-badge">
+                Erf. Kraft: ??? N
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="challenge-feedback" class="hidden p-4 rounded-xl border font-semibold text-sm transition"></div>
+      </section>
+
+
+      <!-- ================= STATION 6: CONCEPT ALLTAGS-PHYSIK ================= -->
+      <section id="station-6" class="station-card hidden bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-6">
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-slate-900">Aufgabe 4: Trägheit im echten Leben</h3>
+          <p class="text-slate-600 text-sm">
+            Der Trägheitssatz von Newton gilt überall im Kosmos. Analysiere die drei berühmten Alltagsphänomene und wähle die korrekte physikalische Begründung aus.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Phänomen 1 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <span class="text-[32px]">🥫</span>
+              <h4 class="font-bold text-slate-800 text-sm">Die Ketchup-Flasche</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Man dreht eine fast leere Glasflasche Ketchup um und bewegt sie schnell nach unten, um sie dann abrupt abzustoppen. Warum fliegt der Ketchup heraus?
+              </p>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase">Wähle die Begründung:</label>
+              <select id="p1-select" class="w-full px-2 py-1.5 border rounded-lg text-xs font-semibold focus:ring-2 focus:ring-physics-500">
+                <option value="">Bitte wählen...</option>
+                <option value="false1">Beim abrupten Stopp verdoppelt sich die Schwerkraft.</option>
+                <option value="correct">Der Ketchup behält seine Abwärtsbewegung trägheitsbedingt bei, während die Flasche stoppt.</option>
+                <option value="false2">Die Trägheitskraft drückt aktiv von oben auf die Flasche.</option>
+                <option value="false3">Der Luftdruck in der Flasche drückt den Ketchup nach draußen.</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Phänomen 2 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <span class="text-[32px]">🏃</span>
+              <h4 class="font-bold text-slate-800 text-sm">Das Stolpern</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Wenn du beim schnellen Laufen über eine Gehwegplatte stolperst, fällst du unweigerlich nach vorne auf die Nase. Warum nicht nach hinten?
+              </p>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase">Wähle die Begründung:</label>
+              <select id="p2-select" class="w-full px-2 py-1.5 border rounded-lg text-xs font-semibold focus:ring-2 focus:ring-physics-500">
+                <option value="">Bitte wählen...</option>
+                <option value="false1">Eine Stolperplatte kehrt den Schwerpunkt des Menschen magnetisch um.</option>
+                <option value="false2">Beim Bremsen entsteht ein kräftiger Windstoß von hinten.</option>
+                <option value="correct">Deine Füße werden abrupt gestoppt, während dein Oberkörper trägheitsbedingt nach vorne weitergleitet.</option>
+                <option value="false3">Die Trägheit ist eine aktive Kraft, die den Rücken nach vorne stößt.</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Phänomen 3 -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <span class="text-[32px]">🛰️</span>
+              <h4 class="font-bold text-slate-800 text-sm">Voyager im Weltraum</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Die Raumsonden der NASA fliegen seit fast 50 Jahren ohne jeden Treibstoff und Antrieb durch das All. Warum werden sie nicht langsamer?
+              </p>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase">Wähle die Begründung:</label>
+              <select id="p3-select" class="w-full px-2 py-1.5 border rounded-lg text-xs font-semibold focus:ring-2 focus:ring-physics-500">
+                <option value="">Bitte wählen...</option>
+                <option value="false1">Sie reiten auf den unsichtbaren Wellen der kosmischen Trägheitskraft.</option>
+                <option value="correct">Im All bremsen keine nennenswerten Gegenkräfte, sodass sie ihren gleichförmigen Bewegungszustand beibehalten.</option>
+                <option value="false2">Ihr Solar-Heimlich-Motor treibt sie geräuschlos an.</option>
+                <option value="false3">Die Sonden fallen unaufhaltsam auf das Zentrum der Galaxie zu.</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t">
+          <p id="t4-feedback" class="text-sm font-semibold text-slate-500">Prüfe deine physikalischen Alltags-Einschätzungen.</p>
+          <button onclick="checkTask4()" class="w-full sm:w-auto px-6 py-2.5 bg-physics-600 hover:bg-physics-700 text-white font-bold rounded-xl transition">
+            Konzept-Wahl prüfen
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ================= STATION 7: ISSAC NEWTONS DENK-OASE (Zusammenfassung & Urkunde) ================= -->
+      <section id="station-7" class="station-card hidden bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100 space-y-8 animate-fadeIn">
+        <div class="text-center space-y-3">
+          <span class="text-6xl animate-bounce inline-block">🍎</span>
+          <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">Trägheits-Champion!</h3>
+          <p class="text-slate-600 max-w-xl mx-auto text-sm leading-relaxed">
+            Du hast das virtuelle Newton-Labor erfolgreich absolviert. Du weißt jetzt genau, wie Kräftegleichgewicht und der berühmte Trägheitssatz miteinander verwoben sind!
+          </p>
+        </div>
+
+        <!-- HIGHLIGHT: Sir Isaac Newtons Monumental Callout Box -->
+        <div class="bg-gradient-to-r from-physics-900 to-indigo-950 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-physics-700 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-physics-600/10 rounded-full blur-2xl"></div>
+          
+          <div class="shrink-0 bg-white/10 p-4 rounded-2xl border border-white/20 backdrop-blur">
+            <span class="text-4xl">📜</span>
+          </div>
+          
+          <div class="space-y-3 flex-1 text-center md:text-left">
+            <span class="text-physics-400 font-bold uppercase tracking-widest text-[10px]">Das 1. Newtonsche Axiom (Der Trägheitssatz)</span>
+            <blockquote class="text-lg md:text-xl font-serif italic text-slate-100 leading-snug">
+              "Ein Körper verharrt im Zustand der Ruhe oder der gleichförmigen, geradlinigen Bewegung, solange keine resultierende äußere Kraft auf ihn einwirkt und ihn zwingt, seinen Zustand zu ändern."
+            </blockquote>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              <strong>Auf Deutsch übersetzt:</strong> Ein Paket auf dem LKW bewegt sich einfach immer weiter geradeaus mit derselben Geschwindigkeit, bis eine reale Gegenkraft (wie die Reibung) es abbremst. Es braucht also keine Kraft, um in Bewegung zu bleiben, sondern eine Kraft, um die Bewegung zu verändern!
+            </p>
+          </div>
+        </div>
+
+        <!-- Beautiful static Certificate of Accomplishment -->
+        <div class="border-8 border-double border-physics-600 p-8 rounded-3xl bg-slate-50 max-w-2xl mx-auto shadow-lg text-center space-y-6 relative overflow-hidden">
+          <!-- Background Seal -->
+          <div class="absolute -right-12 -bottom-12 w-48 h-48 opacity-[0.04] text-physics-600 pointer-events-none">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+            </svg>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-xs uppercase tracking-widest font-extrabold text-physics-600 block">Zertifikat der Naturwissenschaften</span>
+            <h4 class="text-2xl font-black text-slate-800 tracking-tight">Meister des Trägheitssatzes</h4>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-xs text-slate-500">Diese Auszeichnung wird verliehen an:</p>
+            <input type="text" id="cert-name" placeholder="Dein Name..." class="w-full max-w-md px-4 py-2 border-b-2 border-slate-300 bg-transparent text-center font-extrabold text-xl text-slate-800 focus:outline-none focus:border-physics-600 placeholder:font-normal placeholder:text-slate-400">
+          </div>
+
+          <div class="text-xs text-slate-600 leading-relaxed max-w-md mx-auto space-y-3">
+            <p>
+              für das fehlerfreie Nachweisen der physikalischen Bedingungen des **Kräftegleichgewichts** ($\Sigma \vec{F} = 0$) und der qualitativen Logik der Trägheit von Massen im Raum.
+            </p>
+          </div>
+
+          <div class="pt-6 flex justify-between items-center text-[10px] text-slate-400 max-w-md mx-auto border-t border-slate-200">
+            <span class="font-mono">Datum: 28. Juni 2026</span>
+            <span class="font-serif italic font-bold text-slate-500">Sir Isaac Newton, P.R.S. 🍎</span>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-xs text-amber-900 max-w-lg mx-auto text-center leading-relaxed">
+          🎓 <strong>Didaktischer Tipp für den Unterricht:</strong> Versuche im Alltag nach weiteren Beispielen für Trägheit zu suchen. Ob im Bus, beim Skateboarden oder beim Suppe-Tragen – Newtons 1. Axiom begleitet dich überall hin!
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Sticky Bottom Navigation Bar for Mobile -->
+    <footer class="bg-white border-t border-slate-200 py-3 px-6 flex justify-between items-center shrink-0 md:hidden">
+      <button onclick="prevStep()" class="text-xs bg-slate-100 px-3 py-2 rounded-lg font-bold text-slate-700">&larr; Zurück</button>
+      <span class="text-xs font-bold text-slate-500" id="mobile-progress-label">Schritt 1 / 8</span>
+      <button onclick="nextStep()" class="text-xs bg-physics-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-physics-700">Weiter &rarr;</button>
+    </footer>
+
+  </main>
+
+
+  <!-- ================= JAVASCRIPT STATE & LOGIC ================= -->
+  <script>
+    // --- APP STATE & PHYSICS VARIABLES ---
+    let currentStep = 1; // Direct start with Station 1 (Motivation)
+    const totalSteps = 8; // Station 1 to 7 (indexes corresponding to stations 1-7)
+    const completableStationsCount = 5; // Stationen 1, 3, 4, 5, 6 vergeben einen Fortschritts-Haken (2 = Simulation, 7 = Abschluss zählen nicht)
+    let completedSteps = new Set();
+    let isTeacherMode = false;
+
+    // Sidebar Config (No Start/Introduction Station 0)
+    const stations = [
+      { id: 1, label: "📦 1. Motivation", title: "Motivation: Das ungesicherte Paket" },
+      { id: 2, label: "🕹️ 2. Haupt-Simulation", title: "Simulation: Kräfte im LKW-Fahrerhaus" },
+      { id: 3, label: "🤔 3. Logik-Check", title: "Aufgabe 1: Warum rutscht das Paket?" },
+      { id: 4, label: "✍️ 4. Trägheitssatz Lückentext", title: "Aufgabe 2: Der Trägheitssatz im Detail" },
+      { id: 5, label: "🎯 5. Brems-Challenge", title: "Aufgabe 3: Die Brems-Herausforderung (Mehrere Level)" },
+      { id: 6, label: "🌪️ 6. Alltags-Physik", title: "Aufgabe 4: Trägheit im echten Leben" },
+      { id: 7, label: "🎓 7. Abschluss & Trägheit", title: "Trägheitssatz: Sir Isaac Newtons Denk-Oase" }
+    ];
+
+    // Physics constants/states
+    let simParams = {
+      mass: 10,       // kg
+      accel: 4,       // m/s^2 (truck braking deceleration)
+      frictionMax: 45 // N (max holding static friction)
+    };
+
+    // Parallax background variables
+    let bgSkyOffset = 0;
+    let bgGroundOffset = 0;
+    let bgRoadOffset = 0;
+
+    // Animation physics variables (Canvas 1)
+    let canvas, ctx;
+    let animId = null;
+    let truckX = 50;
+    let truckV = 3.0; // constant speed initially
+    let truckDecel = 0;
+    let boxRelX = 0; // Relative position of box on flatbed
+    let boxRelV = 0; // Relative velocity of box
+    let isBrakingActive = false;
+    let isCrashed = false;
+    let showForcesActive = false; // Persistent forces toggle
+
+    // Multi-Level Challenge Physics state
+    let activeChallengeLevel = 1;
+    let challengeLevels = {
+      1: { mass: 12, frictionMax: 48, solved: false, title: "Level 1: Leichtes Paket", limit: 4.0 },
+      2: { mass: 8, frictionMax: 24, solved: false, title: "Level 2: Mittleres Paket", limit: 3.0 },
+      3: { mass: 15, frictionMax: 75, solved: false, title: "Level 3: Schweres Paket", limit: 5.0 }
+    };
+    let challengeDecel = 1.0;
+    let challengeCheatMode = false; // Toggle calculated forces
+
+
+    // ================= APP INITS ON LOAD =================
+    window.onload = function() {
+      // Build Sidebar navigation items
+      buildSidebar();
+
+      // Init Main LKW Simulation Canvas
+      canvas = document.getElementById('sim-canvas');
+      ctx = canvas.getContext('2d');
+      resetBrakeSim();
+
+      // Setup task 1 choices
+      buildTask1Choices();
+
+      // Setup task 2 dropdowns
+      buildTask2Dropdowns();
+
+      // Set Challenge level fields
+      switchChallengeLevel(1);
+
+      // Render Math
+      renderMath();
+
+      // Show step 1 initially
+      showStep(1);
+    };
+
+    // Re-render formulas using MathJax dynamically
+    function renderMath() {
+      if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise();
+      }
+    }
+
+
+    // ================= SIDEBAR & NAVIGATION SYSTEM =================
+    function buildSidebar() {
+      const navContainer = document.getElementById('sidebar-nav');
+      navContainer.innerHTML = '';
+
+      stations.forEach((station) => {
+        const item = document.createElement('button');
+        item.id = `nav-item-${station.id}`;
+        item.onclick = () => showStep(station.id);
+        item.className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors duration-200 hover:bg-slate-800 text-slate-300";
+        
+        // Inner structure
+        item.innerHTML = `
+          <span class="truncate pr-2">${station.label}</span>
+          <span id="nav-badge-${station.id}" class="w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[10px] shrink-0 text-slate-400">
+            ${station.id}
+          </span>
+        `;
+        navContainer.appendChild(item);
+      });
+    }
+
+    function updateProgress() {
+      const pct = Math.round((completedSteps.size / completableStationsCount) * 100);
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+      document.getElementById('progress-percent').innerText = `${pct}%`;
+      document.getElementById('progress-text').innerText = `${completedSteps.size} von ${completableStationsCount} Stationen abgeschlossen`;
+
+      // Update badges in Sidebar
+      stations.forEach((station) => {
+        const badge = document.getElementById(`nav-badge-${station.id}`);
+        if (completedSteps.has(station.id)) {
+          badge.innerHTML = "✓";
+          badge.className = "w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] shrink-0 text-white font-bold animate-scaleUp";
+        } else {
+          badge.innerHTML = station.id;
+          badge.className = "w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[10px] shrink-0 text-slate-400";
+        }
+      });
+    }
+
+    function showStep(stepIdx) {
+      if (stepIdx < 1 || stepIdx >= totalSteps) return;
+      currentStep = stepIdx;
+
+      // Hide all station elements
+      document.querySelectorAll('.station-card').forEach((el) => {
+        el.classList.add('hidden');
+      });
+
+      // Show active section
+      document.getElementById(`station-${stepIdx}`).classList.remove('hidden');
+
+      // Update sidebar styling
+      stations.forEach((station) => {
+        const btn = document.getElementById(`nav-item-${station.id}`);
+        if (station.id === stepIdx) {
+          btn.classList.add('bg-physics-600', 'text-white');
+          btn.classList.remove('text-slate-300', 'hover:bg-slate-800');
+        } else {
+          btn.classList.remove('bg-physics-600', 'text-white');
+          btn.classList.add('text-slate-300', 'hover:bg-slate-800');
+        }
+      });
+
+      // Update Header Titles
+      document.getElementById('current-badge').innerText = `Station ${stepIdx}`;
+      const activeStation = stations.find(s => s.id === stepIdx);
+      document.getElementById('current-station-title').innerText = activeStation ? activeStation.title : '';
+      document.getElementById('mobile-progress-label').innerText = `Schritt ${stepIdx} / ${totalSteps - 1}`;
+
+      // Show/Hide Next/Prev Buttons appropriately
+      document.getElementById('btn-prev').disabled = (stepIdx === 1);
+      document.getElementById('btn-prev').style.opacity = (stepIdx === 1) ? "0.5" : "1";
+
+      // Trigger specifics
+      if (stepIdx === 2) {
+        resetBrakeSim();
+      } else {
+        if (animId) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        }
+      }
+
+      renderMath();
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps - 1) {
+        showStep(currentStep + 1);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        showStep(currentStep - 1);
+      }
+    }
+
+    // Helper for Exploding Confetti
+    function triggerConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // Teacher mode for quick checking
+    function toggleTeacherMode() {
+      isTeacherMode = !isTeacherMode;
+      const dot = document.getElementById('teacher-mode-dot');
+      const btn = document.getElementById('teacher-mode-btn');
+      
+      if (isTeacherMode) {
+        dot.style.transform = 'translateX(20px)';
+        dot.classList.add('bg-white');
+        btn.classList.add('bg-physics-600');
+        revealTeacherSolutions();
+      } else {
+        dot.style.transform = 'translateX(0px)';
+        dot.classList.remove('bg-white');
+        btn.classList.remove('bg-physics-600');
+      }
+    }
+
+    function revealTeacherSolutions() {
+      if (!isTeacherMode) return;
+      
+      // Complete Station 1
+      completeStation1();
+
+      // Solve Station 3 (Qualitative questions)
+      q1Solved = true;
+      q2Solved = true;
+      q3Solved = true;
+      
+      for (let i = 1; i <= 3; i++) {
+        const radios = document.getElementsByName(`q${i}`);
+        if (radios.length > 0) {
+          radios[0].checked = true;
+        }
+        checkIndividualQuestion(i);
+      }
+
+      // Solve Station 4 (Lückentext)
+      document.getElementById('t2-g1').value = "Fahrzeug";
+      document.getElementById('t2-g2').value = "Reibungskraft";
+      document.getElementById('t2-g3').value = "Kräftegleichgewicht";
+      document.getElementById('t2-g4').value = "vorne";
+      document.getElementById('t2-g5').value = "Trägheitssatz";
+      document.getElementById('t2-g6').value = "gleichförmigen";
+      checkTask2();
+
+      // Solve Station 5 (All challenge levels)
+      challengeLevels[1].solved = true;
+      challengeLevels[2].solved = true;
+      challengeLevels[3].solved = true;
+      updateChallengeDots();
+      checkChallengeOverallStatus();
+
+      // Solve Station 6 (Alltagsphysik)
+      document.getElementById('p1-select').value = "correct";
+      document.getElementById('p2-select').value = "correct";
+      document.getElementById('p3-select').value = "correct";
+      checkTask4();
+
+      triggerConfetti();
+    }
+
+
+    // ================= STATION 1 MOTIVATION VERIFICATION =================
+    function completeStation1() {
+      const btn = document.getElementById('btn-complete-s1');
+      btn.className = "w-full sm:w-auto px-6 py-3 bg-emerald-700 text-white font-bold rounded-xl shadow-lg border-2 border-emerald-400 flex items-center justify-center gap-2 animate-pulse";
+      completedSteps.add(1);
+      updateProgress();
+      triggerConfetti();
+    }
+
+
+    // ================= SIMULATION PHYSICS ENGINE (Canvas 1) =================
+    function updateSimParams() {
+      simParams.mass = parseFloat(document.getElementById('slider-mass').value) || 10;
+      simParams.accel = parseFloat(document.getElementById('slider-accel').value) || 4;
+      simParams.frictionMax = parseFloat(document.getElementById('slider-friction').value) || 45;
+
+      document.getElementById('val-mass').innerText = `${simParams.mass} kg`;
+      document.getElementById('val-accel').innerText = `${simParams.accel.toFixed(1)} m/s²`;
+      document.getElementById('val-friction').innerText = `${simParams.frictionMax} N`;
+
+      // Live computation for Legend
+      const forceNeeded = simParams.mass * simParams.accel;
+      document.getElementById('hud-force-needed').innerText = `${forceNeeded.toFixed(1)} N`;
+      document.getElementById('hud-force-holding').innerText = `${simParams.frictionMax.toFixed(1)} N`;
+
+      const badge = document.getElementById('hud-status-badge');
+      if (forceNeeded <= simParams.frictionMax) {
+        badge.innerText = "SICHER (GLEICHGEWICHT)";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+      } else {
+        badge.innerText = "RUTSCHT (GESTÖRT!)";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 animate-pulse";
+      }
+
+      resetBrakeSim();
+    }
+
+    function resetBrakeSim() {
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+      isBrakingActive = false;
+      isCrashed = false;
+      showForcesActive = false; // Hide persistent forces upon reset
+      
+      // Initial Positionen
+      truckX = 80;
+      truckV = 3.0; // constant speed initially
+      truckDecel = 0;
+      boxRelX = 0;
+      boxRelV = 0;
+
+      drawSimulationFrame();
+
+      // Automatically restart idle driving animation if we are on Station 2
+      if (currentStep === 2 && !animId) {
+        animLoop();
+      }
+    }
+
+    function startBrakeSim() {
+      isCrashed = false;
+      boxRelX = 0;
+      boxRelV = 0;
+      isBrakingActive = true;
+      showForcesActive = true; // Show forces during braking & freeze them afterwards!
+      truckV = 7.0; // High speed right before braking
+      
+      // Set parameters depending on current active station
+      if (currentStep === 5) {
+        simParams.mass = challengeLevels[activeChallengeLevel].mass;
+        simParams.accel = challengeDecel;
+        simParams.frictionMax = challengeLevels[activeChallengeLevel].frictionMax;
+      } else {
+        simParams.mass = parseFloat(document.getElementById('slider-mass').value) || 10;
+        simParams.accel = parseFloat(document.getElementById('slider-accel').value) || 4;
+        simParams.frictionMax = parseFloat(document.getElementById('slider-friction').value) || 45;
+      }
+      
+      if (!animId) {
+        animLoop();
+      }
+    }
+
+    function animLoop() {
+      updatePhysics();
+      drawSimulationFrame();
+      
+      if (truckV > 0 || boxRelV > 0 || (isCrashed && truckV > 0)) {
+        animId = requestAnimationFrame(animLoop);
+      } else {
+        animId = null;
+      }
+    }
+
+    function updatePhysics() {
+      if (isBrakingActive) {
+        // Truck deceleration
+        truckDecel = simParams.accel * 0.05; 
+        truckV -= truckDecel;
+        if (truckV < 0) {
+          truckV = 0;
+          truckDecel = 0;
+        }
+
+        // Parallax updates proportional to speed
+        bgSkyOffset = (bgSkyOffset + truckV * 0.15) % canvas.width;
+        bgGroundOffset = (bgGroundOffset + truckV * 0.7) % canvas.width;
+        bgRoadOffset = (bgRoadOffset + truckV * 1.5) % canvas.width;
+
+        // Box motion (from the road's inertial system):
+        const maxBoxDecel = simParams.frictionMax / simParams.mass; 
+
+        if (simParams.accel > maxBoxDecel) {
+          // Friction is too weak, box slides forward
+          const relAccel = (simParams.accel - maxBoxDecel) * 0.035; 
+          boxRelV += relAccel;
+          boxRelX += boxRelV;
+
+          // Slide forward limit (collides with cabin)
+          if (boxRelX >= 115) {
+            boxRelX = 115;
+            boxRelV = 0;
+            isCrashed = true;
+          }
+        }
+      } else {
+        // Constant drive cruise
+        bgSkyOffset = (bgSkyOffset + truckV * 0.15) % canvas.width;
+        bgGroundOffset = (bgGroundOffset + truckV * 0.7) % canvas.width;
+        bgRoadOffset = (bgRoadOffset + truckV * 1.5) % canvas.width;
+      }
+    }
+
+    function drawSimulationFrame() {
+      if (!ctx) return;
+      
+      // Background Clear
+      ctx.fillStyle = '#0f172a'; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // --- 1. SKY / STARS / CLOUDS PARALLAX ---
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.4)';
+      ctx.fillRect(0, 0, canvas.width, 100);
+
+      // Draw simple stars that scroll
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 4; i++) {
+        const starX = (100 + i * 180 - bgSkyOffset) % canvas.width;
+        const x = starX < 0 ? starX + canvas.width : starX;
+        ctx.beginPath();
+        ctx.arc(x, 25 + i * 15, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw faint distant mountains (Parallax Layer 2)
+      ctx.fillStyle = '#1e1b4b';
+      ctx.beginPath();
+      for (let i = -1; i < 3; i++) {
+        const peakX = (i * 250 - bgSkyOffset * 0.5);
+        ctx.lineTo(peakX, 150);
+        ctx.lineTo(peakX + 125, 70);
+        ctx.lineTo(peakX + 250, 150);
+      }
+      ctx.lineTo(canvas.width, 180);
+      ctx.lineTo(0, 180);
+      ctx.closePath();
+      ctx.fill();
+
+      // --- 2. ROADSIDE LANDSCAPE ---
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 140, canvas.width, 40);
+
+      // Draw Scrolling Trees (Parallax Layer 3)
+      for (let i = -1; i < 4; i++) {
+        const treeX = (i * 180 - bgGroundOffset);
+        const tx = treeX < -100 ? treeX + canvas.width + 100 : treeX;
+        
+        // Trunk
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(tx + 40, 125, 6, 20);
+        // Foliage
+        ctx.fillStyle = '#064e3b';
+        ctx.beginPath();
+        ctx.arc(tx + 43, 115, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0f766e';
+        ctx.beginPath();
+        ctx.arc(tx + 43, 105, 12, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // --- 3. THE ROADWAY ---
+      ctx.fillStyle = '#1e293b'; 
+      ctx.fillRect(0, 155, canvas.width, 65);
+      
+      // Road bottom shoulder
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(0, 210, canvas.width, 10);
+
+      // Dash markings
+      ctx.fillStyle = '#ffffff';
+      const dashLength = 40;
+      const spaceLength = 30;
+      const period = dashLength + spaceLength;
+      
+      for (let x = -period; x < canvas.width + period; x += period) {
+        const drawX = x - bgRoadOffset;
+        ctx.fillRect(drawX, 180, dashLength, 4);
+      }
+
+      // --- 4. Draw LKW ---
+      const lx = 140;
+      const ly = 95;
+
+      // Draw Trailer-Flatbed
+      ctx.fillStyle = '#334155'; 
+      ctx.fillRect(lx, ly + 40, 160, 25);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(lx, ly + 65, 160, 4);
+
+      // Draw Wheels
+      ctx.fillStyle = '#020617';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+
+      const rotAngle = (bgRoadOffset * 0.05) % (Math.PI * 2);
+
+      const drawRotatingWheel = (cx, cy) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Rotating spokes
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - 14 * Math.cos(rotAngle), cy - 14 * Math.sin(rotAngle));
+        ctx.lineTo(cx + 14 * Math.cos(rotAngle), cy + 14 * Math.sin(rotAngle));
+        ctx.moveTo(cx - 14 * Math.sin(rotAngle), cy + 14 * Math.cos(rotAngle));
+        ctx.lineTo(cx + 14 * Math.sin(rotAngle), cy - 14 * Math.cos(rotAngle));
+        ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+      };
+
+      drawRotatingWheel(lx + 30, ly + 72);
+      drawRotatingWheel(lx + 70, ly + 72);
+      drawRotatingWheel(lx + 130, ly + 72);
+
+      // Cabin (Right side moving right)
+      ctx.fillStyle = '#2563eb'; 
+      ctx.beginPath();
+      ctx.moveTo(lx + 160, ly + 15);
+      ctx.lineTo(lx + 210, ly + 15);
+      ctx.lineTo(lx + 230, ly + 45);
+      ctx.lineTo(lx + 230, ly + 68);
+      ctx.lineTo(lx + 160, ly + 68);
+      ctx.closePath();
+      ctx.fill();
+
+      // Cabin Window
+      ctx.fillStyle = '#bae6fd';
+      ctx.beginPath();
+      ctx.moveTo(lx + 185, ly + 23);
+      ctx.lineTo(lx + 205, ly + 23);
+      ctx.lineTo(lx + 218, ly + 43);
+      ctx.lineTo(lx + 185, ly + 43);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wheel under Cabin
+      drawRotatingWheel(lx + 200, ly + 72);
+
+      // --- 5. Draw Crate (Box) ---
+      const bx = lx + 20 + boxRelX;
+      const by = ly + 15;
+      ctx.fillStyle = '#d97706'; 
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 3;
+      ctx.fillRect(bx, by, 25, 25);
+      ctx.strokeRect(bx, by, 25, 25);
+      // Cross lines
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + 25, by + 25); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx + 25, by); ctx.lineTo(bx, by + 25); ctx.stroke();
+
+      // Crash Effect
+      if (isCrashed) {
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('💥 AUFPRALL!', lx + 120, ly + 10);
+      }
+
+      // --- 6. Draw Forces Arrows (NOW PERSISTENT!) ---
+      if (showForcesActive) {
+        // Truck Deceleration force vector
+        drawArrow(lx + 210, ly + 80, lx + 150, ly + 80, '#ef4444', 3);
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText('F_Bremse', lx + 140, ly + 95);
+
+        // Required vs Actual forces on the box
+        const F_erf = simParams.mass * simParams.accel;
+        const F_act = Math.min(F_erf, simParams.frictionMax);
+
+        // Friction slowing the box
+        drawArrow(bx + 12, by + 12, bx - 12 - F_act * 0.4, by + 12, '#10b981', 3);
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 9px monospace';
+        ctx.fillText(`F_Reib: ${F_act.toFixed(0)}N`, bx - 25, by - 15);
+
+        // "Trägheitsbestreben" Arrow representing continuing speed (Newton 1)
+        if (F_erf > F_act) {
+          drawArrow(bx + 12, by + 12, bx + 32 + (F_erf - F_act) * 0.4, by + 12, '#f97316', 2);
+          ctx.fillStyle = '#f97316';
+          ctx.font = 'bold 9px monospace';
+          ctx.fillText(`v (Trägheit behalten)`, bx - 20, by - 5);
+        }
+
+        // Draw a tiny info tag when frozen
+        if (truckV === 0 && boxRelV === 0) {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.fillRect(10, canvas.height - 30, 240, 22);
+          ctx.fillStyle = '#facc15';
+          ctx.font = '9px sans-serif';
+          ctx.fillText('❄️ KRÄFTE-SNAPSHOT (Drücke Reset für Neustart)', 15, canvas.height - 16);
+        }
+      }
+    }
+
+    function drawArrow(fromx, fromy, tox, toy, color, width) {
+      const headlen = 8;
+      const angle = Math.atan2(toy - fromy, tox - fromx);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(fromx, fromy);
+      ctx.lineTo(tox, toy);
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(tox, toy);
+      ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.fill();
+    }
+
+
+    // ================= TASK 1: LOGICAL ARGUMENTATION CHECK (WITH INDIVIDUAL VALIDATIONS) =================
+    const task1Questions = [
+      {
+        id: 1,
+        question: "Warum fängt das Paket auf der Ladefläche erst ab einer ganz bestimmten Bremsstärke an zu rutschen?",
+        choices: [
+          "Die Haftreibungskraft passt sich an und bremst das Paket bei leichtem Bremsen synchron mit dem LKW ab. Erst wenn die dafür nötige Bremskraft $m \\cdot a$ die Haftreibungsgrenze $F_{\\text{Reib, max}}$ übersteigt, reicht die Reibung nicht mehr aus. Das Paket befindet sich horizontal im Kräftegleichgewicht und behält seine Bewegung ungestört bei.",
+          "Bei schwachem Bremsen wirkt die geheimnisvolle Trägheitskraft noch nicht auf das Paket, weshalb kein Kräftegleichgewicht nötig ist.",
+          "Der LKW bremst am Anfang so langsam, dass das Paket sich mechanisch an der Ladefläche verhaken kann.",
+          "Bei leichtem Bremsen saugt die Schwerkraft das Paket nach unten, sodass es sich nicht bewegen kann.",
+          "Das Paket rutscht eigentlich immer, wir bemerken die kleine gleichförmige Verschiebung bei schwacher Verzögerung nur nicht."
+        ],
+        correctIdx: 0
+      },
+      {
+        id: 2,
+        question: "Was passiert mit der Bewegung des ungesicherten Pakets im exakten Moment einer Vollbremsung aus Sicht eines am Straßenrand stehenden Beobachters?",
+        choices: [
+          "Das Paket behält seine Vorwärtsgeschwindigkeit unverändert bei und fliegt gleichförmig weiter, weil in horizontaler Richtung keine ausreichende bremsende Kraft auf es wirkt. Der LKW unter ihm wird dagegen stark abgebremst.",
+          "Das Paket erfährt eine plötzliche unausgeglichene Trägheitskraft, die es im Raum aktiv nach vorne beschleunigt.",
+          "Das Paket stoppt augenblicklich synchron mit den Reifen des LKWs, um das Kräftegleichgewicht aufrechtzuerhalten.",
+          "Das Paket wird sofort nach hinten geschoben, weil die Ladefläche unter ihm wegbeschleunigt.",
+          "Es erfährt eine sofortige Hebekraft nach oben durch die in kinetische Energie umgewandelte Reibung."
+        ],
+        correctIdx: 0
+      },
+      {
+        id: 3,
+        question: "Wie lässt sich das Rutschen des Pakets wissenschaftlich am präzisesten begründen?",
+        choices: [
+          "Das Paket befindet sich in horizontaler Richtung nahezu im Kräftegleichgewicht (Summe der äußeren Kräfte ist fast null), da die Haftreibung zu schwach ist. Nach dem Trägheitssatz ändert es daher seinen gleichförmigen Bewegungszustand nicht.",
+          "Die Trägheit ist eine aktive Gegenkraft, die das Kräftegleichgewicht der Schwerkraft stört und das Paket nach vorne zieht.",
+          "Die blockierten Reifen übertragen eine kinetische Impulswelle auf das Paket, die es nach vorne katapultiert.",
+          "Die Luftwirbel am Heck des LKWs ziehen das Paket mit einem aerodynamischen Sog nach vorne.",
+          "Das Paket wandelt seine potentielle Schwerkraft augenblicklich in kinetische Vorwärtsenergie um."
+        ],
+        correctIdx: 0
+      }
+    ];
+
+    let q1Solved = false;
+    let q2Solved = false;
+    let q3Solved = false;
+
+    function buildTask1Choices() {
+      task1Questions.forEach((q) => {
+        const container = document.getElementById(`q${q.id}-choices`);
+        if (!container) return;
+        container.innerHTML = '';
+
+        q.choices.forEach((choice, choiceIdx) => {
+          const wrapper = document.createElement('label');
+          wrapper.className = "flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200 hover:bg-physics-50 cursor-pointer transition text-xs font-semibold text-slate-700";
+          wrapper.innerHTML = `
+            <input type="radio" name="q${q.id}" value="${choiceIdx}" class="mt-0.5 accent-physics-600 shrink-0">
+            <span>${choice}</span>
+          `;
+          container.appendChild(wrapper);
+        });
+      });
+    }
+
+    function checkIndividualQuestion(qNum) {
+      const q = task1Questions.find(item => item.id === qNum);
+      const selected = document.querySelector(`input[name="q${qNum}"]:checked`);
+      const fb = document.getElementById(`q${qNum}-feedback`);
+      const status = document.getElementById(`q${qNum}-status`);
+      const block = document.getElementById(`q${qNum}-block`);
+
+      if (!selected) {
+        fb.innerText = "❌ Bitte wähle zuerst eine Antwortmöglichkeit aus!";
+        fb.className = "text-xs font-bold text-rose-600";
+        return;
+      }
+
+      const isCorrect = parseInt(selected.value) === q.correctIdx;
+
+      // Reset all choices classes inside this question block
+      document.getElementsByName(`q${qNum}`).forEach((input) => {
+        input.parentNode.className = "flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer text-xs font-semibold text-slate-700";
+      });
+
+      if (isCorrect) {
+        selected.parentNode.className = "flex items-start gap-3 p-3 bg-emerald-50 rounded-xl border-2 border-emerald-500 cursor-pointer text-xs font-semibold text-emerald-950";
+        status.innerText = "Gelöst ✓";
+        status.className = "text-xs font-bold text-emerald-600";
+        fb.innerText = "🎉 Absolut richtig argumentiert!";
+        fb.className = "text-xs font-bold text-emerald-600 animate-scaleUp";
+        block.classList.add('border-emerald-200', 'bg-emerald-50/20');
+        block.classList.remove('border-rose-200', 'bg-rose-50/20');
+
+        if (qNum === 1) q1Solved = true;
+        if (qNum === 2) q2Solved = true;
+        if (qNum === 3) q3Solved = true;
+
+        triggerConfetti();
+        checkGlobalLogikProgress();
+      } else {
+        selected.parentNode.className = "flex items-start gap-3 p-3 bg-rose-50 rounded-xl border-2 border-rose-500 cursor-pointer text-xs font-semibold text-rose-950";
+        status.innerText = "Fehlerhaft ❌";
+        status.className = "text-xs font-bold text-rose-600";
+        fb.innerText = "💡 Leider falsch. Lies dir den physikalischen Clou auf Station 1 noch einmal durch!";
+        fb.className = "text-xs font-bold text-rose-600";
+        block.classList.add('border-rose-200', 'bg-rose-50/20');
+        block.classList.remove('border-emerald-200', 'bg-emerald-50/20');
+        
+        if (qNum === 1) q1Solved = false;
+        if (qNum === 2) q2Solved = false;
+        if (qNum === 3) q3Solved = false;
+        checkGlobalLogikProgress();
+      }
+      renderMath();
+    }
+
+    function checkGlobalLogikProgress() {
+      const globalFb = document.getElementById('t1-station-global-feedback');
+      
+      if (q1Solved && q2Solved && q3Solved) {
+        globalFb.classList.remove('hidden');
+        globalFb.innerText = "Hervorragend! Du hast alle drei Logikfragen erfolgreich geknackt. Du hast das Konzept von Trägheit und Kräftegleichgewicht vollends durchdrungen!";
+        globalFb.className = "p-4 rounded-xl border bg-emerald-50 border-emerald-500 text-emerald-800 font-bold text-sm text-center animate-scaleUp";
+        completedSteps.add(3);
+        updateProgress();
+      } else {
+        globalFb.classList.add('hidden');
+      }
+    }
+
+
+    // ================= TASK 2: CLOZE TEXT SYSTEM =================
+    const t2Words = [
+      "?", "Fahrzeug", "Paket", "Reibungskraft", "Gewichtskraft", "Trägheitskraft", 
+      "Wechselwirkungsprinzip", "Kräftegleichgewicht", "vorne", "hinten", "Trägheitssatz", 
+      "gleichförmigen", "beschleunigten", "Luftwiderstand"
+    ];
+
+    const t2Correct = {
+      "t2-g1": "Fahrzeug",
+      "t2-g2": "Reibungskraft",
+      "t2-g3": "Kräftegleichgewicht",
+      "t2-g4": "vorne",
+      "t2-g5": "Trägheitssatz",
+      "t2-g6": "gleichförmigen"
+    };
+
+    function buildTask2Dropdowns() {
+      const keys = Object.keys(t2Correct);
+      keys.forEach((key) => {
+        const sel = document.getElementById(key);
+        if (!sel) return;
+        sel.innerHTML = '';
+        t2Words.forEach((word) => {
+          const opt = document.createElement('option');
+          opt.value = word === "?" ? "" : word;
+          opt.innerText = word;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    function checkTask2() {
+      let allCorrect = true;
+      const keys = Object.keys(t2Correct);
+
+      keys.forEach((key) => {
+        const el = document.getElementById(key);
+        if (!el) return;
+        const correctVal = t2Correct[key];
+
+        if (el.value === correctVal) {
+          el.className = "px-2.5 py-1.5 border-2 border-emerald-500 rounded-lg bg-emerald-50 text-emerald-950 font-bold text-sm";
+        } else {
+          el.className = "px-2.5 py-1.5 border-2 border-rose-500 rounded-lg bg-rose-50 text-rose-950 font-bold text-sm";
+          allCorrect = false;
+        }
+      });
+
+      const fb = document.getElementById('t2-feedback');
+      if (allCorrect) {
+        fb.innerText = "Fantastisch! Du hast die physikalischen Details des Trägheitssatzes lückenlos hergeleitet.";
+        fb.className = "text-sm font-bold text-emerald-600";
+        completedSteps.add(4);
+        updateProgress();
+        triggerConfetti();
+      } else {
+        fb.innerText = "Einige Lücken sind noch falsch besetzt. Überlege genau, wo Kräfte wirken und wann das Kräftegleichgewicht am Paket herrscht.";
+        fb.className = "text-sm font-bold text-rose-600";
+      }
+    }
+
+
+    // ================= TASK 3: MULTI-LEVEL CHALLENGE (REVERSE-ENGINEERING) =================
+    function toggleChallengeCheat() {
+      challengeCheatMode = !challengeCheatMode;
+      const btn = document.getElementById('btn-challenge-cheat');
+      const cheatText = document.getElementById('cheat-text');
+      const cheatIcon = document.getElementById('cheat-icon');
+
+      if (challengeCheatMode) {
+        btn.classList.add('bg-amber-600', 'hover:bg-amber-700', 'text-white');
+        btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-300');
+        cheatText.innerText = "Spickzettel ausblenden";
+        cheatIcon.innerText = "🙈";
+      } else {
+        btn.classList.remove('bg-amber-600', 'hover:bg-amber-700', 'text-white');
+        btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-300');
+        cheatText.innerText = "Spickzettel einblenden";
+        cheatIcon.innerText = "👁️";
+      }
+      updateChallengeSlider();
+    }
+
+    function switchChallengeLevel(levelIdx) {
+      activeChallengeLevel = levelIdx;
+      const config = challengeLevels[levelIdx];
+
+      // Update level tabs visual
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`btn-lvl-${i}`);
+        if (!btn) continue;
+        if (i === levelIdx) {
+          btn.className = "flex-1 py-3 text-center border-b-2 border-physics-600 font-bold text-sm text-physics-600 transition focus:outline-none";
+        } else {
+          btn.className = "flex-1 py-3 text-center border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 transition focus:outline-none";
+        }
+      }
+
+      // Update details card
+      document.getElementById('challenge-badge').innerText = `Level ${levelIdx}`;
+      document.getElementById('challenge-title').innerText = config.title;
+      document.getElementById('c-target-mass').innerText = `${config.mass} kg`;
+      document.getElementById('c-target-friction').innerText = `${config.frictionMax} N`;
+      document.getElementById('level-solved-indicator').innerText = config.solved ? "Gelöst ✓" : "Offen ⭕";
+      document.getElementById('level-solved-indicator').className = config.solved ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-amber-400";
+
+      // Slider visual limits mapping
+      document.getElementById('c-mass-label').innerText = `${config.mass} kg (Gesperrt)`;
+      document.getElementById('c-friction-label').innerText = `${config.frictionMax} N (Gesperrt)`;
+
+      // Map progress widths roughly
+      document.getElementById('c-mass-progress').style.width = `${(config.mass / 25) * 100}%`;
+      document.getElementById('c-friction-progress').style.width = `${(config.frictionMax / 80) * 100}%`;
+
+      // Reset challenge slider value to neutral
+      document.getElementById('c-slider-accel').value = 1.0;
+      updateChallengeSlider();
+
+      // Clear feedback
+      document.getElementById('challenge-feedback').className = "hidden";
+      resetBrakeSim();
+      renderMath();
+    }
+
+    function updateChallengeSlider() {
+      challengeDecel = parseFloat(document.getElementById('c-slider-accel').value);
+      document.getElementById('c-val-accel').innerText = `${challengeDecel.toFixed(1)} m/s²`;
+
+      const config = challengeLevels[activeChallengeLevel];
+      const badge = document.getElementById('challenge-telemetry-badge');
+      
+      if (challengeCheatMode) {
+        const calculatedForce = config.mass * challengeDecel;
+        badge.innerText = `Erf. Kraft: ${calculatedForce.toFixed(1)} N`;
+        badge.className = "text-center sm:text-right px-3 py-1.5 bg-amber-100 border-amber-300 text-amber-900 rounded-lg border text-xs font-mono font-bold animate-pulse";
+      } else {
+        badge.innerText = "Erf. Kraft: ??? N";
+        badge.className = "text-center sm:text-right px-3 py-1.5 bg-white rounded-lg border text-xs font-mono font-bold";
+      }
+    }
+
+    function runChallengeSim() {
+      const config = challengeLevels[activeChallengeLevel];
+      
+      // Load current parameters to the active sim state
+      simParams.mass = config.mass;
+      simParams.accel = challengeDecel;
+      simParams.frictionMax = config.frictionMax;
+
+      resetBrakeSim();
+      startBrakeSim();
+
+      const fb = document.getElementById('challenge-feedback');
+      fb.classList.remove('hidden');
+
+      const requiredForce = config.mass * challengeDecel;
+
+      // Checking precision
+      if (Math.abs(challengeDecel - config.limit) <= 0.05) {
+        config.solved = true;
+        updateChallengeDots();
+        triggerConfetti();
+        checkChallengeOverallStatus();
+
+        // Build elegant level routing buttons in feedback block
+        let levelRouterBtnHtml = '';
+        if (activeChallengeLevel === 1) {
+          levelRouterBtnHtml = `
+            <button onclick="switchChallengeLevel(2)" class="mt-3 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition duration-200">
+              ➡️ Weiter zu Level 2: Mittleres Paket
+            </button>`;
+        } else if (activeChallengeLevel === 2) {
+          levelRouterBtnHtml = `
+            <button onclick="switchChallengeLevel(3)" class="mt-3 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition duration-200">
+              ➡️ Weiter zu Level 3: Schweres Paket
+            </button>`;
+        } else if (activeChallengeLevel === 3) {
+          levelRouterBtnHtml = `
+            <button onclick="showStep(6)" class="mt-3 px-5 py-2.5 bg-physics-600 hover:bg-physics-700 text-white font-bold rounded-xl text-xs shadow-md transition duration-200 animate-pulse">
+              🎉 Meisterprüfung ablegen: Alltags-Physik starten!
+            </button>`;
+        }
+
+        fb.innerHTML = `
+          <div class="space-y-2">
+            <p>🎉 <strong>Volltreffer!</strong> Bei einer Verzögerung von genau $${challengeDecel.toFixed(1)}\\text{ m/s}^2$ wird eine Bremskraft von exakt $${requiredForce.toFixed(0)}\\text{ N}$ benötigt. Das entspricht punktgenau der maximalen Reibungsgrenze von $${config.frictionMax}\\text{ N}$.</p>
+            <p class="text-xs text-emerald-800">Das Kräftegleichgewicht am Paket bleibt haarscharf bestehen, die Ladung rutscht gerade so nicht weg!</p>
+            ${levelRouterBtnHtml}
+          </div>
+        `;
+        fb.className = "p-4 rounded-xl border bg-emerald-50 border-emerald-500 text-emerald-800 text-sm font-semibold animate-scaleUp";
+        
+      } else if (challengeDecel < config.limit) {
+        fb.innerHTML = `👍 Die Fahrt ist sicher! Bei $${challengeDecel.toFixed(1)}\\text{ m/s}^2$ rutscht das Paket nicht ($F_{\\text{erf}} = ${requiredForce.toFixed(1)}\\text{ N} < ${config.frictionMax}\\text{ N}$). Das Paket wird also erfolgreich mitverzögert. Aber kannst du noch schärfer bremsen lassen, ohne das Paket ins Rutschen zu bringen?`;
+        fb.className = "p-4 rounded-xl border bg-blue-50 border-blue-500 text-blue-800 text-sm font-semibold";
+      } else {
+        fb.innerHTML = `💥 Kabumm! Die Verzögerung von $${challengeDecel.toFixed(1)}\\text{ m/s}^2$ erfordert eine bremsende Haltekraft von $${requiredForce.toFixed(1)}\\text{ N}$. Das übersteigt die Reibungshaftungsgrenze von $${config.frictionMax}\\text{ N}$! Das Paket verharrt im horizontalen Kräftegleichgewicht und rutscht weiter nach vorne!`;
+        fb.className = "p-4 rounded-xl border bg-rose-50 border-rose-500 text-rose-800 text-sm font-semibold";
+      }
+
+      renderMath();
+    }
+
+    function updateChallengeDots() {
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById(`dot-lvl-${i}`);
+        if (!dot) continue;
+        if (challengeLevels[i].solved) {
+          dot.className = "w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[8px] font-bold text-white shadow-md animate-scaleUp";
+          dot.innerHTML = "✓";
+        } else {
+          dot.className = "w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[8px] font-bold text-slate-300";
+          dot.innerHTML = i;
+        }
+      }
+      
+      // Update Solved Badge
+      const activeSolved = challengeLevels[activeChallengeLevel].solved;
+      document.getElementById('level-solved-indicator').innerText = activeSolved ? "Gelöst ✓" : "Offen ⭕";
+      document.getElementById('level-solved-indicator').className = activeSolved ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-amber-400";
+    }
+
+    function checkChallengeOverallStatus() {
+      if (challengeLevels[1].solved && challengeLevels[2].solved && challengeLevels[3].solved) {
+        completedSteps.add(5);
+        updateProgress();
+      }
+    }
+
+
+    // ================= STATION 6: ALLTAGS-PHYSIK CONCEPT CHECK =================
+    function checkTask4() {
+      const p1 = document.getElementById('p1-select').value;
+      const p2 = document.getElementById('p2-select').value;
+      const p3 = document.getElementById('p3-select').value;
+
+      let p1Correct = p1 === "correct";
+      let p2Correct = p2 === "correct";
+      let p3Correct = p3 === "correct";
+
+      // Colorize individual selectors
+      const paintSelect = (elId, correct) => {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (el.value === "") {
+          el.className = "w-full px-2 py-1.5 border rounded-lg text-xs font-semibold focus:ring-2 focus:ring-physics-500 bg-white text-slate-700";
+        } else if (correct) {
+          el.className = "w-full px-2 py-1.5 border border-emerald-500 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-950";
+        } else {
+          el.className = "w-full px-2 py-1.5 border border-rose-500 rounded-lg text-xs font-semibold bg-rose-50 text-rose-950";
+        }
+      };
+
+      paintSelect('p1-select', p1Correct);
+      paintSelect('p2-select', p2Correct);
+      paintSelect('p3-select', p3Correct);
+
+      const fb = document.getElementById('t4-feedback');
+      if (p1Correct && p2Correct && p3Correct) {
+        fb.innerText = "Sensationell! Du hast alle drei Alltagsbeispiele physikalisch vollkommen korrekt über Newtons Trägheitssatz begründet!";
+        fb.className = "text-sm font-bold text-emerald-600";
+        completedSteps.add(6);
+        updateProgress();
+        triggerConfetti();
+      } else {
+        fb.innerText = "Einige Alltagsphänomene wurden physikalisch noch falsch interpretiert. Achte auf den Erhalt des Bewegungszustands!";
+        fb.className = "text-sm font-bold text-rose-600";
+      }
+    }
+  </script>
+</body>
+</html>

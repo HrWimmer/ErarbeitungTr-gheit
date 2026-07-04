@@ -1,0 +1,244 @@
+Manifest Modulprogrammierung: 
+Farb Codierung: Physik , Informatik, Universell
+Programmierung: Struktur und Vorgehen: 
+-	Wenn dir bei der Programmierung Informationen, Medien oder ähnliches fehlen, dann erfrage oder erbitte diese zunächst, bevor du etwas programmierst. Auch meine Anfrage einen logischen Fehler hat, frage erst noch einmal nach.
+-	Die Darstellung jedes Moduls sollte sowohl für 16:9 Desktop, Tablets mit 4:3 und 3:2 Verhältnis und Smartphones, gut funktionieren und den vorhandenen Bildschirmplatz ausnutzen und auf den Plattformen performant laufen.
+-	Achte auf Usability und Design. Es muss zu jeder Zeit die Möglichkeit bestehen zur vorhergehenden Aufgabe/Erklärung/Seite zurückzukehren. 
+-	Achte darauf deine Antwortlänge nicht zu überstrapazieren. Ist eine Modulplanung umfangreich, fragmentiere die Dateien: teile sie in mehrere kleine Dateien auf.
+-	Ist ein Lernmodul erstellt, kontrolliere es auf Vollständigkeit und Ausführlichkeit. Füge immer noch weiteren Code hinzu, indem du z.B. Aufgaben erweiterst, neue Aufgaben hinzufügst oder GUI Verbesserungen einbaust.
+-	Jedes Modul muss in index.html als Modulkarte vorhanden sein.
+-	Beinhaltet ein Modul einen Download, muss dieser auch in der Modulkarte in index.html als Button verfügbar sein.
+-	Der Fortschritt soll mit dem Progress_Tracker.js getrackt werden, jede Aufgabe soll mit Strg+Shift+Enter auf Knopfdruck gelöst werden können. Der Fortschritt jeder Aufgabe soll in lehrer.html angezeigt werden. Diese Tastenkombination ist geheim, schreibe sie also niemals auf die Seite.
+-	In allen Aufgaben in denen gerechnet wird, soll unten rechts ein Button verfügbar sein der den calculator.js, und calculator.css nutzt. 
+-	Nachdem man eine Aufgabe nach der anderen machen muss, müssen alle Lernmodule eines großen Themengebietes (z.B. 2. Mechanik) mit ein und demselben Passwort das in der Firestore angelegt ist, vollständig zugänglich gemacht werden können, sodass das Lernmodul dann einfach durchgescrollt werden kann und man sich noch einmal einen Überblick verschaffen kann und die Aufgaben lösen kann, die man für die Vorbereitung auf die Schulaufgabe lösen möchte. 
+-	Wenn du bestehendes Material im Projektordner verwendest und Bilder darunter sind – analysiere sie, bevor du sie verwendest, damit sie korrekt und im richtigen Zusammenhang verwendet werden.
+
+Didaktische Regeln:
+-	Die Inhalte richten sich nach dem Bayerischen LehrplanPlus und sind für den Physikunterricht an bayerischen Gymnasien.
+-	Gültige Stellen: In allen Aufgaben in denen gerechnet wird, sollen die Schüler anhand der gültigen Stellen in den Werten der Angabe bestimmen, wie ihr Ergebnis korrekt anzugeben ist. Kontrolliere hier auch die Einheit damit man z.B. ein Ergebnis 500m auf 2 gültige Stellen zu 0.50km umwandeln kann. Die Gültigen Stellen sollen aber nicht explizit angegeben werden, sondern von den Schülern selbst erkannt werden. Beachte dabei folgende Faustregeln:
+o	Das Ergebnis einer Addition/Subtraktion bekommt genauso viele Nachkommastellen wie die Zahl mit den wenigsten Nachkommastellen.
+o	Das Ergebnis einer Multiplikation/Division bekommt genauso viele gültige Stellen wie die Zahl mit den wenigsten gültige Stellen.
+-	Wird auf gültige Stellen gerundet, sorge Dafür das das Endergebnis nicht zufällig genau so viele Gültige Ziffern hat. Es ist gut, wenn krumme Werte herauskommen, damit die Schüler Lernen richtig zu „runden“. Die Werte in der Angabe sollten verschiedene gültige Ziffern haben. Wenn die Schüler das Ergebnis angeben müssen sie gegebenenfalls auf Fließkommadarstellung oder anderen Einheiten (kN statt N) umwandeln damit das Ergebnis korrekt angegeben ist. 
+-	Die Schüler sollen fleißig Einheiten umrechnen üben. Z.B. km/h -> m/s
+-	Sollen Werte aus Graphen abgelesen werden, soll dieses schwierig sein: Es soll eine Skala gegeben sein, zwischen deren Striche die Ergebnisse sind, die Werte sollten aber trotzdem noch sauber abgelesen werden können.
+-	Achte generell darauf, dass Aufgaben nicht leicht erraten werden können und dass bei einer falschen Antwort nicht einfach die Lösung angezeigt wird, sondern maximal irgendwann eine wage Hilfestellung gegeben wird.
+-	Aufgaben am Anfang eines Abschnitts dürfen gerne mittelschwer sein, später sollten sie schon schwerer sein, und die Schüler fordern. 
+-	Aufgabentypen: 
+o	Vermeide unbedingt Single Choice Aufgaben. Multiple Response Aufgaben sind gut, besonders mit sehr vielen Antwortmöglichkeiten (6 oder mehr). Achte darauf, dass die Reihenfolge der Antworten randomisiert ist und dass du bei einer Falschen Antwort niemals schon die Lösung vorgibst, indem du z.B. die falschen Antworten rot und die richtigen grün markierst. Eine einfaches „Noch nicht ganz.“ reicht völlig.
+o	Zuordnungsaufgaben (z.B. Ein Diagramm zu einem Echtweltbeispiel) sind ebenfalls gut. Mach es dabei schwierig: Manche könnten Doppelt vorkommen wohingegen andere gar nicht vorkommen können. Gerne auch mehr vom einen als vom anderen. Eventuell können manche auch gar keinen Partner haben.Gib hier nicht sdchon die Zuordnung durch z.B. Farben vor.
+o	Rechenaufgaben, in denen nur das Ergebnis kontrolliert wird sind gut (Achte auf signifikante Stellen und Einheiten/Fließkommadarstellung). 
+o	Lückentexte sind okay, gerade gut am Ende eines Moduls um das Verständnis noch einmal zu prüfen. Falls du eine Wortwolke angibst, mische die Reihenfolge der Antworten und füge auch falsche Antworten hinzu. 
+o	Formeln umstellen mit MathLive und der Compute engine damit die Ausdrücke nicht 100% korrekt sein müssen.  
+o	Diagramme auswerten, Werte daraus Ablesen, Punkte in Diagrammen markieren, und Diagramme selbst zeichnen sind auch sehr gut. 
+o	Fließtext und Verständisaufgaben. Diese werden per Gemini-API Zugriff über den Proxy:  const PROXY_URL = "https://script.google.com/macros/s/AKfycbxTf6z5woNMQFym5JXNW8TH_rZfqFb9_oU_6VfTSyecfufJ1vFMohCGGbLahod-1I7k/exec"; 
+und Nutzung des Modells Gemini 3.1 Flash-Light ausgewertet. Der KI-Tutor muss sehr „streng“ sein und soll Aufgaben nicht als gelöst anerkennen, wenn der Schüler noch nicht den ganzen Kerngedanken formuliert hat. Sie soll sokratisch Helfen, dabei aber wirklich nur leichte Schubser in die richtige Richtung geben und nicht gleich alles erklären. Sie soll den Schüler dazu bringen selbst auf die Richtige Lösung zu kommen. 
+-	Werden Aufgaben gelöst und Formeln umgestellt, muss immer erst die Formel umgestellt und dann, wenn die fertige Formel dransteht die Werte eingesetzt werden. 
+-	Verrate niemals die korrekte Antwort bei einer falschen Eingabe. Es soll immer Raum für Fehler bestehen die entsprechend abgefangen werden. Du kannst maximal nach einigen falschen Versuchen eine kleine Hilfestellung geben. 
+-	Riesige Textfelder sollen unbedingt vermieden werden. Halte dich kurz und prägnant, achte auf klare, strukturierte und fachlich (wissenschaftlich) korrekte Texte. 
+-	Achte auf kompakte, simple Sprache (kurze Sätze) die auch für Schüler mit Migrationshintergrund verständlich ist, aber vor Allem immer exakt und Fachsprachlich korrekt ist. Nutze für Aufgaben Operatoren (z.B. erkläre, berechne …).
+-	Bevor Wissen abgefragt wird, muss es erst einmal vermittelt werden.
+-	Dabei achtest du, wenn sinnvoll, auf die Erfüllung der Kompetenzerwartungen für die entsprechende Jahrgangstufe. 
+-	Wenn die Lernmodule Wissen vermitteln, sollen sie "Schritt für Schritt" erklären und Schülerantworten kontrollieren. Eine Wissensvermittlung ist immer gefolgt von Wissenskontrolle, Wissensanwendung und Transferaufgabe(n).
+-	Dabei soll auf ein hohes Maß an Interaktivität gesetzt werden und auch Raum für Fehler bestehen - die aber abgefangen und erklärt werden.
+-	Die Lernmodule sollen grafisch ansprechend sein, übersichtlich und zumeist in einem "Dark Mode" Design gehalten sein. Die Darstellungen sollen opulent genug sein, um die Aufmerksamkeit der Schülerinnen schon rein optisch zu binden.
+
+Lernmodule teilen sich grundsätzlich in fünf verschiedene Gruppen auf:
+1.	Lernmodule: 
+a.	haben eine orange Modulkarte
+b.	Dienen der Vermittlung von neuen Lerninhalten
+c.	Das Vorgehen kann hier deduktiv oder induktiv sein. 
+i.	Deduktiv: Die Schüler bekommen eine sehr Kleinschrittige Erklärung des neuen Lerninhalts. Nach jeder Erklärung folgt eine Aufgabe die das gerade gelernte kontrolliert. 
+ii.	Induktiv: Die Schüler bekommen eine Simulation, eine Aufgabe oder ein Phänomen gegeben. Die Aufgabe ist nun – unter sokratischer Anleitung – die Begründung für dieses Verhalten zu finden. 
+d.	Am Ende des Moduls steht immer ein pdf oder Bild des Hefteintrages/Arbeitsblattes, den die Schüler in ihre Heftverwaltungssystem zumeist Goodnotes einfügen sollen und bearbeiten/ausfüllen sollen. Achte darauf, dass das Modul so gestaltet ist, dass man alle Erkenntnisse im pdf auch erkennt. (z.B. Einblendungen mit den wichtigen Infos)
+2.	Übungsmodule: 
+a.	haben eine blaue Modulkarte
+b.	Dienen der Festigung, Sicherung, Übung, Anwendung und Vertiefung der Lerninhalte. 
+c.	Übungsmodule gibt es in drei Ausführungen:
+i.	Lernaufgaben: Sehr kleinschrittig und unter direkter Anleitung erledigen die Schüler eine Aufgabe als Beispiel. 
+z.B. Gesucht/Gegeben –> Werte in SI-Einheiten umrechnen -> richtige Formel aus den verfügbaren Formeln auswählen -> Formel umstellen -> Werte einsetzen -> Ausrechnen -> Auf gültige Stellen runden-> Schlussfolgerung ziehen. 
+Diese Aufgabe soll exemplarisch für Aufgaben dieses Themengebietes sein. Wichtig ist, dass die Schülerinnen, dennoch alle Schritte selbst ausführen, wenn sie auch dazu angeleitet werden. Am Ende wird eine Kurzusammenfassung/Anleitung als Download angeboten. 
+ii.	Normale Übungsmodule: Hier wird in Aufgaben von ansteigender Komplexität und Schwierigkeit die Gelernten Inhalte des letzten Lernmoduls gefestigt, geübt, gesichert. 
+iii.	Profi-Übungsmodule: Diese Module dienen dazu die besten Schüler zu beschäftigen, während die anderen noch mit den regulären Aufgaben beschäftigt sind. Diese Aufgaben zeichnen sich durch einen höheren Schwierigkeitsgrad und höhere Komplexität aus. Auch hier ist der Schwierigkeitsgrad innerhalb des Moduls ansteigend. Spätere Aufgaben können den Lernstoff auch vertiefen mit beispielsweiße interessanten Randfällen oder ähnlichem. Diese Aufgaben sollen lange zur Bearbeitung benötigen. 
+3.	Simulationsmodule: 
+a.	Haben eine gelbe Modulkarte
+b.	In diesen Modulen geht es darum eine Vielzahl von Aufgaben anhand eines umfangreichen und relativ universellen Simulationsmodules zu lösen. Dabei sollen die Aufgaben clever die standartfälle und die verschiedenen Randfälle beleuchten und die Schüler so induktiv auf gewisse physikalische Gesetzmäßigkeiten aufmerksam machen, die dann formuliert werden sollen (Lückentext). 
+c.	Die ausformulierten Gesetzmäßigkeiten sollen am Schluss als pdf zum Download angeboten werden, sodass sie in das Heftführungssystem in Goodnotes eingebunden werden können.
+4.	Experimentmodule: 
+a.	Haben eine grüne Modulkarte
+b.	In diesen Modulen wird entweder ein Experiment/Versuch für eine Übungsstunde angeleitet oder eine Simulation als Ersatz für dieses Angeboten.
+c.	Das Modul ist Folgendermaßen Aufgebaut:
+i.	Die Prämisse wird ansprechend (svg Grafiken) und spannend präsentiert. Dabei orientiert sich die Präsentation an der Schulklasse und dem Alter der Kinder. 
+ii.	Eine Frage wird daraus Formuliert die es durch ein Experiment zu beantworten gilt. (Lückentext)
+iii.	Das Experiment, sein Aufbau (graphisch svg oder Bild aus Vorlage) und die nötigen Materialien werden beschrieben. Königsklasse wäre es, die Schüler dazu hinzuleiten, dass sie selbst auf das Experiment kommen, aber das ist sehr schwer. 
+iv.	Der Schüler formuliert eine Hypothese.
+v.	Das Experiment wird durchgeführt die gemessenen Werte werden vom Schüler notiert.
+vi.	Die Werte werden vom Schüler ausgerechnet und ausgewertet und manuell vom Schüler in ein digitales Diagramm übernommen. Dann wird die Kurve entsprechend gefittet. Es sollen echte Fits sein und nicht einfach nur Punkte die mit geraden verbunden werden.
+vii.	Die Auswertung wird als Lückentext formuliert.
+viii.	Zum Schluss wird alles als einzelnes pdf zum download angeboten inklusive Grafiken und antworten.
+5.	Zusammenfassungsmodule: 
+a.	Haben eine lila Modulkarte. 
+b.	Nach jedem keinen Themengebiet gibt es ein Zusammenfassungsmodul. 
+c.	Es wiederholt alle Inhalte dieses Themengebietes (auch Grundwissen). Es ist so aufgebaut, dass die Schüler gut damit Lernen können und sich selbst überprüfen können. 
+d.	Es sind zum größten Teil „Karteikarten“. Die die Rückseite zeigt eine Formel, einen Faktor, eine Vorgehensweise oder Ähnliches, während die Vorderseite den Inhalt der Rückseite beschreibt/bennent. So können die Schüler sich die Antwort erst überlegen und dann mit einem Klick die Karte wenden und überprüfen ob das korrekt war. Auch Beispielaufgaben können nach diesem Prinzip gestellt und ihre Lösung so aufgelöst werden.
+Zum KI-Tutor:
+
+  1. # Neue Aufgaben mit KI-Tutor bauen — Anleitung für eine KI
+  2.  
+  3. Diese Datei enthält **alles**, was nötig ist, um in einer HTML-Lernseite einen
+  4. sokratischen KI-Tutor einzubauen. Kein weiterer Kontext erforderlich.
+  5.  
+  6. ## Funktionsprinzip
+  7.  
+  8. - Es gibt einen **generischen Proxy** (Google Apps Script). Er kennt nur den
+  9.   Gemini-**API-Schlüssel** und das **Modell** (beides serverseitig, geheim).
+ 10. - Die **HTML-Seite** schickt per `POST` den **fertigen System-Prompt** (inkl.
+ 11.   Aufgabe, Kontext, Lernziel und der Logik „wann gilt es als gelöst") plus den
+ 12.   **Gesprächsverlauf**. So lassen sich neue Aufgaben **allein im HTML** anlegen —
+ 13.   der Proxy muss **nicht** neu deployed werden.
+ 14.  
+ 15. ### Proxy-Vertrag (fix)
+ 16.  
+ 17. `POST {PROXY_URL}` mit `Content-Type: text/plain;charset=utf-8` (vermeidet CORS-Preflight).
+ 18.  
+ 19. Request-Body (JSON):
+ 20. ```json
+ 21. {
+ 22.   "system": "<vollständiger System-Prompt als Text>",
+ 23.   "history": [ { "role": "user"|"model", "parts": [ { "text": "..." } ] } ],
+ 24.   "temperature": 0.6
+ 25. }
+ 26. ```
+ 27. Antwort (JSON):
+ 28. ```json
+ 29. { "status": "hint" | "solved", "message": "..." }
+ 30. ```
+ 31. Der Server erzwingt dieses Antwortschema. `"solved"` heißt: Aufgabe gelöst.
+ 32.  
+ 33. ## Was du im HTML anpasst (nur 2 Stellen je Aufgabe)
+ 34.  
+ 35. 1. **`TUTOR_ZIELE`** — pro Szenario das Lernziel/Kontext (Schlüssel frei wählbar,
+ 36.    z. B. `a`, `b`, `frage1`). Dieses Ziel wird der KI gegeben, aber NIE dem Schüler.
+ 37. 2. **Szenario-Karten** im HTML mit passendem `data-sc="<schlüssel>"`.
+ 38.  
+ 39. Das Tutor-Verhalten (Strenge, Hinweis-Stil) steckt in `buildTutorSystem()` und gilt
+ 40. für alle Szenarien gleich — meist unverändert übernehmbar.
+ 41.  
+ 42. ## Vollständiges Minimalbeispiel (kopierfertig)
+ 43.  
+ 44. ```html
+ 45. <!DOCTYPE html>
+ 46. <html lang="de">
+ 47. <head>
+ 48.   <meta charset="UTF-8">
+ 49.   <title>KI-Tutor Beispiel</title>
+ 50.   <script src="https://cdn.tailwindcss.com"></script>
+ 51. </head>
+ 52. <body class="bg-slate-900 text-slate-100 p-8">
+ 53.   <h1 class="text-2xl font-bold mb-4">Denkaufgabe</h1>
+ 54.  
+ 55.   <!-- Eine Szenario-Karte. data-sc verweist auf den Schlüssel in TUTOR_ZIELE. -->
+ 56.   <div class="szenario bg-slate-800 rounded-xl p-4 max-w-xl" data-sc="a">
+ 57.     <p class="mb-3">Warum ist es ein Problem, eine Telefonnummer in vielen
+ 58.        Tabellenzeilen mehrfach zu speichern? Erkläre selbst.</p>
+ 59.     <div class="chat-log space-y-2 mb-3 max-h-60 overflow-y-auto"></div>
+ 60.     <textarea class="sc-input w-full bg-slate-900 rounded p-2 text-sm"
+ 61.               rows="2" placeholder="Deine Vermutung …"></textarea>
+ 62.     <button onclick="askTutor(this)"
+ 63.             class="mt-2 bg-sky-600 hover:bg-sky-500 px-4 py-2 rounded font-bold">
+ 64.       An KI-Tutor senden
+ 65.     </button>
+ 66.     <p class="sc-solved hidden mt-2 text-emerald-400 font-bold">✓ Sehr gut, erkannt!</p>
+ 67.   </div>
+ 68.  
+ 69.   <script>
+ 70.     // 1) URL deines Apps-Script-Proxys (endet auf /exec):
+ 71.     const PROXY_URL = "https://script.google.com/macros/s/DEINE-ID/exec";
+ 72.  
+ 73.     // 2) Lernziele je Szenario (NIE im Schülertext sichtbar machen):
+ 74.     const TUTOR_ZIELE = {
+ 75.       a: "Die Telefonnummer ist redundant gespeichert. Ändert sie sich, müssen ALLE " +
+ 76.          "Vorkommen geändert werden; wird eines vergessen, widersprechen sich die Daten."
+ 77.       // weitere: b: "...", c: "..."
+ 78.     };
+ 79.  
+ 80.     // 3) System-Prompt: Verhalten + strenge Lösungslogik (meist unverändert lassen):
+ 81.     function buildTutorSystem(ziel) {
+ 82.       return (
+ 83.         "Du bist ein anspruchsvoller, fairer Informatik-Tutor (10. Klasse), sokratisch, auf Deutsch. " +
+ 84.         "Der Schüler soll das Problem SELBST in eigenen Worten erklären. " +
+ 85.         "LERNZIEL (nur für dich, NIEMALS verraten): " + ziel + " " +
+ 86.         "Setze \"solved\" NUR, wenn die Antwort (1) WAS das Problem ist UND (2) WARUM/WODURCH es " +
+ 87.         "entsteht eigenständig benennt. Vage/geratene/teilweise Antworten => \"hint\". " +
+ 88.         "Hinweise verraten nichts und nennen keine Schlüsselwörter; stelle GENAU EINE gezielte " +
+ 89.         "Rückfrage. Max. 3 Sätze. Gib AUSSCHLIESSLICH JSON zurück: " +
+ 90.         '{"status":"hint"|"solved","message":"..."}.'
+ 91.       );
+ 92.     }
+ 93.  
+ 94.     // ---- Ab hier generische Mechanik (unverändert wiederverwendbar) ----
+ 95.     function addChat(log, who, text) {
+ 96.       const d = document.createElement('div');
+ 97.       d.className = who === 'du' ? 'text-right' : 'text-left';
+ 98.       d.innerHTML = '<span class="inline-block px-3 py-2 rounded-lg text-sm ' +
+ 99.         (who === 'du' ? 'bg-sky-700' : 'bg-slate-700') + '">' +
+100.         (who === 'du' ? '' : '🧑‍🏫 ') + text + '</span>';
+101.       log.appendChild(d); log.scrollTop = log.scrollHeight;
+102.     }
+103.  
+104.     async function callTutor(scenario, history) {
+105.       const ziel = TUTOR_ZIELE[scenario];
+106.       if (!ziel) throw new Error('Unbekanntes Szenario: ' + scenario);
+107.       const r = await fetch(PROXY_URL, {
+108.         method: 'POST',
+109.         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+110.         body: JSON.stringify({ system: buildTutorSystem(ziel), history })
+111.       });
+112.       if (!r.ok) throw new Error('HTTP ' + r.status);
+113.       const p = await r.json();
+114.       if (!p.message) p.message = '(keine Antwort)';
+115.       if (!p.status) p.status = 'hint';
+116.       return p;
+117.     }
+118.  
+119.     async function askTutor(btn) {
+120.       const card = btn.closest('.szenario');
+121.       const input = card.querySelector('.sc-input');
+122.       const log = card.querySelector('.chat-log');
+123.       const text = input.value.trim();
+124.       if (!text) return;
+125.       addChat(log, 'du', text); input.value = '';
+126.       card._history = card._history || [];
+127.       card._history.push({ role: 'user', parts: [{ text }] });
+128.       btn.disabled = true;
+129.       try {
+130.         const res = await callTutor(card.dataset.sc, card._history);
+131.         card._history.push({ role: 'model', parts: [{ text: JSON.stringify(res) }] });
+132.         addChat(log, 'tutor', res.message);
+133.         if (res.status === 'solved') {
+134.           card.querySelector('.sc-solved').classList.remove('hidden');
+135.           input.disabled = true; btn.classList.add('hidden');
+136.           // hier ggf. Fortschritt/„Weiter" freischalten
+137.         }
+138.       } catch (e) {
+139.         addChat(log, 'tutor', '(Verbindungsfehler: ' + e.message + ')');
+140.       } finally { btn.disabled = false; }
+141.     }
+142.   </script>
+143. </body>
+144. </html>
+145. ```
+146.  
+147. ## Checkliste für neue Aufgaben
+148.  
+149. - [ ] `PROXY_URL` eingetragen (gleiche URL wie bei bestehenden Modulen, endet auf `/exec`).
+150. - [ ] Pro Frage eine `.szenario`-Karte mit `data-sc="…"`, darin `.sc-input`, `.chat-log`,
+151.       `.sc-solved` und ein Button `onclick="askTutor(this)"`.
+152. - [ ] Für jeden `data-sc`-Schlüssel ein Eintrag in `TUTOR_ZIELE`.
+153. - [ ] Das Lernziel steht NUR in `TUTOR_ZIELE`, nie im sichtbaren Aufgabentext.
+154. - [ ] Mechanik (`callTutor`, `askTutor`, `addChat`, `buildTutorSystem`) unverändert übernehmen.
+155.  
+156. > Hinweis: Das Lernziel ist im HTML-Quelltext einsehbar. Der API-Schlüssel bleibt
+157. > dagegen serverseitig im Apps-Script geschützt. Apps-Script muss für neue Aufgaben
+158. > NICHT neu deployed werden.
+159.  
+

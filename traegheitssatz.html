@@ -1,0 +1,2575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physik interaktiv: Der Trägheitssatz</title>
+    <!-- Outfit Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+    <!-- Custom styling to ensure premium look -->
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .glass-panel {
+            background: rgba(19, 27, 47, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 20px;
+        }
+        .btn-orange {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            transition: all 0.2s;
+        }
+        .btn-orange:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+        }
+        .word-bank {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .word-chip {
+            background: #2563eb;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .word-chip:hover {
+            transform: scale(1.05);
+            background: #3b82f6;
+        }
+        .word-chip.used {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+        .notebook-page {
+            background: #ffffff;
+            color: #1e293b;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-left: 6px solid #f97316;
+        }
+        .underline-blank {
+            display: inline-block;
+            min-width: 100px;
+            text-align: center;
+            border-bottom: 2px dashed #f97316;
+            color: #2563eb;
+            cursor: pointer;
+            font-weight: 700;
+            padding: 0 4px;
+        }
+        .underline-blank.filled {
+            color: #0f172a;
+            border-bottom: 2px solid #0f172a;
+        }
+        /* iPad / Touch-Geräte: kein 300ms Tap-Delay, bessere Touch-Targets */
+        button, select, label, a { touch-action: manipulation; }
+        input[type="range"] { touch-action: pan-y; }
+        button { min-height: 36px; }
+        canvas { touch-action: none; }
+
+        @media print {
+            header, footer, #floating-calculator, #calc-trigger-btn { display: none !important; }
+            body { background: white !important; margin: 0; padding: 0; }
+            main { padding: 0 !important; }
+            #sec-1, #sec-2, #sec-logik, #sec-3, #sec-4, #sec-5, #sec-7 { display: none !important; }
+            #sec-6 {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #sec-6 > *:not(#notebook-print-area) { display: none !important; }
+            #notebook-print-area {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-slate-400 hover:text-white transition font-bold text-sm">⬅ Zurück</a>
+                <div class="h-6 w-px bg-slate-800"></div>
+                <span class="text-2xl">🚀</span>
+                <div>
+                    <h1 class="text-lg font-extrabold text-white">Lernmodul: Der Trägheitssatz</h1>
+                    <p class="text-[10px] text-slate-400 font-medium">Physik 8.3 Mechanik &bull; Einstieg &amp; Definition</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Progress Bar -->
+                <div class="w-32 bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800 relative">
+                    <div id="progressBar" class="bg-orange-500 h-full w-[0%] transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-12 space-y-12 w-full">
+        
+        <!-- Sektion 1: Motivation / Alltagsphänomen -->
+        <section id="sec-1" class="glass-panel p-6 md:p-8 shadow-xl space-y-6">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 1: Alltagsphänomen
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-1">🔴 Offen</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Das ungesicherte Paket im Bremsvorgang</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-sky-500/8 border border-sky-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-sky-500/15 border border-sky-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <path d="M2 6 Q16 2 16 6 L16 28 Q16 31 2 28Z" fill="#7dd3fc" stroke="#0ea5e9" stroke-width="1.3"/>
+                  <path d="M30 6 Q16 2 16 6 L16 28 Q16 31 30 28Z" fill="#bae6fd" stroke="#0ea5e9" stroke-width="1.3"/>
+                  <line x1="16" y1="6" x2="16" y2="28" stroke="#0369a1" stroke-width="1.5"/>
+                  <line x1="5" y1="12" x2="14" y2="12" stroke="#38bdf8" stroke-width="1.1"/><line x1="5" y1="16" x2="14" y2="16" stroke="#38bdf8" stroke-width="1.1"/><line x1="5" y1="20" x2="14" y2="20" stroke="#38bdf8" stroke-width="1.1"/>
+                  <line x1="18" y1="12" x2="27" y2="12" stroke="#38bdf8" stroke-width="1.1"/><line x1="18" y1="16" x2="27" y2="16" stroke="#38bdf8" stroke-width="1.1"/><line x1="18" y1="20" x2="27" y2="20" stroke="#38bdf8" stroke-width="1.1"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-sky-500 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Einzelarbeit</p>
+                <p class="text-xs font-bold text-sky-300">Lesen &amp; Entdecken</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+                    <p>
+                        Stell dir vor: Ein schweres Holzpaket liegt völlig lose auf der glatten Ladefläche eines LKW. Der LKW fährt mit einer konstanten Geschwindigkeit von <strong>50 km/h</strong> geradeaus.
+                    </p>
+                    <p>
+                        Plötzlich taucht ein Hindernis auf und der Fahrer bremst abrupt ab! <strong>Was passiert mit dem ungesicherten Paket?</strong> Es rutscht unaufhaltsam nach vorne und prallt gegen das Fahrerhaus.
+                    </p>
+                    <div class="border-l-4 border-blue-500 bg-blue-500/10 p-4 rounded-r-xl space-y-2">
+                        <h4 class="font-bold text-blue-300 text-xs uppercase tracking-wide">Physikalischer Clou: Trägheit &amp; Kräftegleichgewicht</h4>
+                        <p class="text-xs text-blue-200">
+                            Viele glauben, das Paket werde aktiv nach vorne <span class="underline">geschoben</span>. <strong>Das ist falsch!</strong>
+                        </p>
+                        <p class="text-xs text-blue-200 leading-relaxed">
+                            Betrachten wir das Ganze von der Straße aus: Auf den LKW wirkt eine enorme Bremskraft nach hinten. Auf das lose Paket wirkt horizontal dagegen <em>keine ausreichende Kraft</em>, um es mitzubremsen. Es befindet sich nahezu im <strong>Kräftegleichgewicht</strong> (\(\Sigma \vec{F} \approx 0\)) und behält nach dem <strong>Trägheitssatz</strong> seine Bewegung einfach bei — während der LKW unter ihm weggebremst wird!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Detaillierte SVG Illustration -->
+                <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex flex-col items-center gap-3">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Physikalische Momentaufnahme</span>
+                    <svg viewBox="0 0 400 240" class="w-full max-w-sm h-auto">
+                        <defs>
+                            <marker id="arr-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/>
+                            </marker>
+                            <marker id="arr-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+                            </marker>
+                            <marker id="arr-orange" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316"/>
+                            </marker>
+                        </defs>
+                        <!-- Boden -->
+                        <line x1="10" y1="195" x2="390" y2="195" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="10" y1="200" x2="390" y2="200" stroke="#334155" stroke-width="1" stroke-dasharray="8,6"/>
+                        <!-- LKW Kabine -->
+                        <path d="M 225 118 L 275 118 L 295 148 L 295 185 L 215 185 Z" fill="#1e40af"/>
+                        <path d="M 248 128 L 268 128 L 278 148 L 248 148 Z" fill="#93c5fd" opacity="0.7"/>
+                        <!-- Ladefläche -->
+                        <rect x="65" y="148" width="150" height="37" fill="#334155" rx="3"/>
+                        <!-- Räder -->
+                        <circle cx="105" cy="190" r="13" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+                        <circle cx="185" cy="190" r="13" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+                        <circle cx="265" cy="190" r="13" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+                        <!-- Paket -->
+                        <rect x="115" y="113" width="42" height="35" fill="#b45309" rx="3" stroke="#92400e" stroke-width="2"/>
+                        <line x1="115" y1="113" x2="157" y2="148" stroke="#78350f" stroke-width="1.5"/>
+                        <line x1="157" y1="113" x2="115" y2="148" stroke="#78350f" stroke-width="1.5"/>
+                        <!-- Bremskraft-Pfeil LKW -->
+                        <path d="M 265 190 L 205 190" stroke="#ef4444" stroke-width="3" marker-end="url(#arr-red)"/>
+                        <text x="150" y="215" fill="#ef4444" font-size="10" font-weight="bold">F_Bremse</text>
+                        <!-- Geschwindigkeitspfeil Paket -->
+                        <path d="M 136 95 L 195 95" stroke="#10b981" stroke-width="3" marker-end="url(#arr-green)"/>
+                        <text x="118" y="84" fill="#10b981" font-size="10" font-weight="bold">v_Paket (konstant!)</text>
+                        <!-- Reibungskraft-Pfeil (zu schwach) -->
+                        <path d="M 136 149 L 112 149" stroke="#f97316" stroke-width="2" marker-end="url(#arr-orange)"/>
+                        <text x="60" y="170" fill="#f97316" font-size="9" font-weight="bold">F_Reib (zu schwach)</text>
+                    </svg>
+                    <span class="text-[10px] text-slate-500 text-center">Das Paket behält seine Geschwindigkeit – der LKW bremst darunter weg.</span>
+                </div>
+            </div>
+
+            <!-- Kernpunkt -->
+            <div class="bg-blue-500/10 border border-blue-500/20 p-5 rounded-2xl space-y-3">
+                <h4 class="font-bold text-blue-300 text-sm">Der physikalische Kernpunkt:</h4>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    Damit das Paket gemeinsam mit dem LKW langsamer werden kann, muss eine bremsende Kraft auf das Paket ausgeübt werden. Im Alltag kann das nur die <strong>Haftreibung</strong> zwischen der Ladefläche und der Unterseite des Pakets sein.
+                </p>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    Haftreibung hat jedoch eine physikalische Obergrenze (\(F_{\text{Reib, max}}\)). Wird der LKW zu abrupt gebremst, reicht die maximal übertragbare Reibungskraft nicht aus. Da keine ausreichende Nettokraft horizontal auf das Paket wirkt, behält es einfach seine Geschwindigkeit bei.
+                </p>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-800">
+                <button onclick="solveStep1()" class="py-3 px-6 btn-orange text-white font-bold rounded-xl text-sm min-h-[44px]">
+                    Gelesen &amp; Verstanden ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Sektion 2: Simulation -->
+        <section id="sec-2" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 2: Interaktives Labor
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-2">🔒 Gesperrt</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Der virtuelle Trägheits-Test</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-cyan-500/8 border border-cyan-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-cyan-500/15 border border-cyan-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <rect x="2" y="4" width="28" height="18" rx="2" fill="#164e63" stroke="#06b6d4" stroke-width="1.3"/>
+                  <rect x="4" y="6" width="24" height="14" rx="1" fill="#0c4a6e"/>
+                  <rect x="12" y="22" width="8" height="4" fill="#164e63"/>
+                  <rect x="9" y="25" width="14" height="2.5" rx="1" fill="#06b6d4"/>
+                  <path d="M10 11 L10 20 L14 17 L16 21 L19 19.5 L17 16 L22 15Z" fill="#67e8f9" stroke="#06b6d4" stroke-width="0.5"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-cyan-500 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Interaktiv</p>
+                <p class="text-xs font-bold text-cyan-300">Simulation &amp; Experimentieren</p>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                Erforsche das Verhalten der Kiste. Du kannst die Reibung der Ladefläche (von eisig glatt bis griffig), die Ausgangsgeschwindigkeit des Gleiters und die Masse der Kiste einstellen. Löse mindestens <strong>3 Impulse</strong> aus, um die interaktive Verständnisabfrage freizuschalten.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Canvas Area -->
+                <div class="lg:col-span-8 space-y-4">
+                    <div class="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 p-1">
+                        <canvas id="simCanvas" width="600" height="220" class="w-full block bg-slate-950 rounded-2xl"></canvas>
+                        
+                        <!-- Telemetrie -->
+                        <div class="absolute bottom-2 left-2 bg-slate-950/90 border border-slate-800 text-slate-200 px-3 py-1.5 rounded-xl text-[10px] font-mono flex gap-4 z-10">
+                            <div>v_Wagen: <span id="val-vw" class="text-red-400 font-bold">0.00</span> m/s</div>
+                            <div>v_Kiste: <span id="val-vk" class="text-blue-400 font-bold">0.00</span> m/s</div>
+                            <div>Versuche: <span id="val-count" class="text-yellow-400 font-bold">0</span>/3</div>
+                            <div>Status: <span id="val-status" class="text-white">Gekoppelt</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parameters Controls -->
+                <div class="lg:col-span-4 bg-slate-900/50 border border-slate-800 p-4 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div class="space-y-4 text-xs">
+                        <span class="font-bold text-slate-400 uppercase tracking-widest block mb-2">Einstellungen</span>
+                        
+                        <!-- Friction -->
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-300">Reibung (Ladefläche):</label>
+                            <select id="select-friction" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white outline-none">
+                                <option value="0.02">Eisbahn (sehr glatt, μ = 0,02)</option>
+                                <option value="0.15" selected>Nasser Asphalt (μ = 0,15)</option>
+                                <option value="0.45">Trockener Asphalt (μ = 0,45)</option>
+                            </select>
+                        </div>
+
+                        <!-- Speed -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between">
+                                <label class="font-bold text-slate-300">Geschwindigkeit v:</label>
+                                <span id="display-speed" class="text-orange-400 font-bold">4.0 m/s</span>
+                            </div>
+                            <input type="range" id="slider-speed" min="2" max="8" step="0.5" value="4" oninput="document.getElementById('display-speed').textContent = parseFloat(this.value).toFixed(1) + ' m/s'; resetSim();" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500">
+                        </div>
+
+                        <!-- Mass -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between">
+                                <label class="font-bold text-slate-300">Masse der Kiste:</label>
+                                <span id="display-mass" class="text-orange-400 font-bold">50 kg</span>
+                            </div>
+                            <input type="range" id="slider-mass" min="10" max="100" step="10" value="50" oninput="document.getElementById('display-mass').textContent = this.value + ' kg'; resetSim();" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500">
+                        </div>
+                    </div>
+
+                    <!-- Impulse Trigger Buttons -->
+                    <div class="space-y-2">
+                        <button onclick="triggerImpulse('brake')" id="btnBrake" class="w-full py-2.5 bg-red-700/80 hover:bg-red-600 text-white font-bold rounded-xl text-xs transition border border-red-500/20">
+                            🛑 Abrupt BREMSEN
+                        </button>
+                        <button onclick="triggerImpulse('accel')" id="btnAccel" class="w-full py-2.5 bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition border border-emerald-500/20">
+                            🚀 Stark BESCHLEUNIGEN
+                        </button>
+                        <button onclick="resetSim()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[10px] transition border border-slate-700">
+                            🔄 Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dedicated Question Container below simulation grid -->
+            <div id="sim-question-box" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 mt-6">
+                <!-- Content injected dynamically -->
+            </div>
+        </section>
+
+        <!-- Logik-Check (erscheint direkt nach Simulation) -->
+        <section id="sec-logik" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-blue-500/10 text-blue-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-500/20">
+                    Logik-Check: Physikalische Argumentation
+                </span>
+                <span class="text-xs text-slate-400" id="lq-badge">🔴 Offen</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Hast du die Physik verstanden?</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-purple-500/8 border border-purple-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-purple-500/15 border border-purple-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <ellipse cx="16" cy="14" rx="11" ry="10" fill="#581c87" stroke="#a855f7" stroke-width="1.3"/>
+                  <path d="M8 14 Q8 8 16 8 Q24 8 24 14 Q24 19 20 21 L20 24 L12 24 L12 21 Q8 19 8 14Z" fill="#7e22ce" stroke="#a855f7" stroke-width="1.2"/>
+                  <line x1="16" y1="8" x2="16" y2="22" stroke="#c4b5fd" stroke-width="1" stroke-dasharray="2,2"/>
+                  <path d="M11 13 Q13 10 16 13 Q19 10 21 13" stroke="#c4b5fd" stroke-width="1.2" fill="none"/>
+                  <rect x="12" y="24" width="8" height="2.5" rx="1" fill="#7e22ce" stroke="#a855f7" stroke-width="1"/>
+                  <text x="14" y="20" fill="#e9d5ff" font-size="8" font-weight="bold">?</text>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Einzelarbeit</p>
+                <p class="text-xs font-bold text-purple-300">Logik &amp; Argumentation</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-400 leading-relaxed">
+                Beweise, dass du die Logik hinter Kräftegleichgewicht und Trägheit durchdacht hast. Beantworte jede Frage einzeln und lass sie direkt prüfen.
+            </p>
+
+            <div class="space-y-6" id="lq-container">
+
+                <!-- Frage 1 -->
+                <div id="lq1-block" class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-blue-500/10 text-blue-400 font-bold px-2.5 py-1 rounded-full border border-blue-500/20 uppercase tracking-wider">Frage 1</span>
+                        <span id="lq1-status" class="text-xs font-bold text-slate-400">Offen ⭕</span>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-relaxed">Warum fängt das Paket auf der Ladefläche erst ab einer ganz bestimmten Bremsstärke an zu rutschen?</h4>
+                    <div class="space-y-2" id="lq1-choices"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-slate-800">
+                        <span id="lq1-feedback" class="text-xs text-slate-500">Wähle eine Option und klicke auf Prüfen.</span>
+                        <button onclick="checkLogikQ(1)" class="w-full sm:w-auto px-5 py-2.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition min-h-[44px]">
+                            Frage 1 prüfen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Frage 2 -->
+                <div id="lq2-block" class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-blue-500/10 text-blue-400 font-bold px-2.5 py-1 rounded-full border border-blue-500/20 uppercase tracking-wider">Frage 2</span>
+                        <span id="lq2-status" class="text-xs font-bold text-slate-400">Offen ⭕</span>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-relaxed">Was passiert mit der Bewegung des ungesicherten Pakets im exakten Moment einer Vollbremsung aus Sicht eines am Straßenrand stehenden Beobachters?</h4>
+                    <div class="space-y-2" id="lq2-choices"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-slate-800">
+                        <span id="lq2-feedback" class="text-xs text-slate-500">Wähle eine Option und klicke auf Prüfen.</span>
+                        <button onclick="checkLogikQ(2)" class="w-full sm:w-auto px-5 py-2.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition min-h-[44px]">
+                            Frage 2 prüfen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Frage 3 -->
+                <div id="lq3-block" class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-blue-500/10 text-blue-400 font-bold px-2.5 py-1 rounded-full border border-blue-500/20 uppercase tracking-wider">Frage 3</span>
+                        <span id="lq3-status" class="text-xs font-bold text-slate-400">Offen ⭕</span>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-relaxed">Wie lässt sich das Rutschen des Pakets wissenschaftlich am präzisesten begründen?</h4>
+                    <div class="space-y-2" id="lq3-choices"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-slate-800">
+                        <span id="lq3-feedback" class="text-xs text-slate-500">Wähle eine Option und klicke auf Prüfen.</span>
+                        <button onclick="checkLogikQ(3)" class="w-full sm:w-auto px-5 py-2.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition min-h-[44px]">
+                            Frage 3 prüfen
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Globales Feedback -->
+            <div id="lq-global-feedback" class="hidden p-4 rounded-2xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-bold text-sm text-center">
+                Hervorragend! Du hast alle drei Logikfragen gemeistert und das Konzept von Trägheit und Kräftegleichgewicht vollends durchdrungen. Jetzt geht's weiter zum physikalischen Gesetz! ↓
+            </div>
+        </section>
+
+        <!-- Sektion 3: Das Gesetz -->
+        <section id="sec-3" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 3: Das physikalische Gesetz
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-3">🔒 Gesperrt</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Der Trägheitssatz (1. Newtonsches Axiom)</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-blue-500/8 border border-blue-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-blue-500/15 border border-blue-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <path d="M2 6 Q16 2 16 6 L16 28 Q16 31 2 28Z" fill="#93c5fd" stroke="#3b82f6" stroke-width="1.3"/>
+                  <path d="M30 6 Q16 2 16 6 L16 28 Q16 31 30 28Z" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.3"/>
+                  <line x1="16" y1="6" x2="16" y2="28" stroke="#1d4ed8" stroke-width="1.5"/>
+                  <line x1="5" y1="12" x2="14" y2="12" stroke="#60a5fa" stroke-width="1.2"/><line x1="5" y1="16" x2="14" y2="16" stroke="#60a5fa" stroke-width="1.2"/><line x1="5" y1="20" x2="14" y2="20" stroke="#60a5fa" stroke-width="1.2"/>
+                  <line x1="18" y1="12" x2="27" y2="12" stroke="#60a5fa" stroke-width="1.2"/><line x1="18" y1="16" x2="27" y2="16" stroke="#60a5fa" stroke-width="1.2"/>
+                  <circle cx="26" cy="9" r="3" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
+                  <text x="24.5" y="11" fill="#78350f" font-size="5" font-weight="bold">!</text>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Einzelarbeit</p>
+                <p class="text-xs font-bold text-blue-300">Lesen &amp; Merken</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Deine Beobachtungen aus der Simulation zeigen: Wenn der Lkw abrupt gebremst wird, stoppt er, weil eine starke äußere Kraft (die Bremskraft der Reifen) auf ihn wirkt. Die Kiste rutscht jedoch weiter, da keine ausreichende Bremskraft auf sie einwirkt. Erst die schwächere Reibung der Ladefläche (oder der Absturz) bremst sie schließlich ab.
+            </p>
+
+            <div class="p-6 bg-gradient-to-br from-orange-500/10 to-indigo-500/5 border-l-4 border-orange-500 rounded-r-2xl space-y-3">
+                <h3 class="text-orange-400 font-bold text-sm tracking-wide uppercase">1. Newtonsches Axiom</h3>
+                <p class="text-white font-serif text-lg italic leading-relaxed">
+                    "Ein Körper verharrt im Zustand der Ruhe oder der gleichförmig geradlinigen Bewegung, solange keine resultierende Kraft auf ihn wirkt."
+                </p>
+                <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex flex-wrap gap-x-6 gap-y-1">
+                    <span><strong>Formel-Bedingung:</strong> \(\vec{F}_{\text{ges}} = 0 \iff \vec{v} = \text{konstant}\)</span>
+                    <span><strong>Trägheit:</strong> Widerstand eines Körpers gegen Bewegungsänderungen</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-800">
+                <button onclick="solveStep3()" class="py-2 px-5 btn-orange text-white font-bold rounded-xl text-xs">
+                    Verstanden ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Sektion 4: Denkaufgabe (Transfer) -->
+        <section id="sec-4" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 4: Denkaufgabe
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-4">🔒 Gesperrt</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Transfer: Trägheit im Alltag</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-violet-500/8 border border-violet-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <path d="M16 4 Q24 4 24 12 Q24 18 20 20 L20 23 L12 23 L12 20 Q8 18 8 12 Q8 4 16 4Z" fill="#5b21b6" stroke="#8b5cf6" stroke-width="1.3"/>
+                  <rect x="12" y="23" width="8" height="2.5" rx="1" fill="#5b21b6" stroke="#8b5cf6" stroke-width="1"/>
+                  <rect x="13" y="25.5" width="6" height="2" rx="1" fill="#4c1d95"/>
+                  <line x1="16" y1="7" x2="16" y2="12" stroke="#c4b5fd" stroke-width="1.5"/>
+                  <circle cx="16" cy="14" r="2" fill="#c4b5fd"/>
+                  <path d="M6 6 L8 8" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M26 6 L24 8" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M16 2 L16 4" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-violet-400 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Einzelarbeit</p>
+                <p class="text-xs font-bold text-violet-300">Nachdenken &amp; Auswählen</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                Wende den Trägheitssatz auf drei Alltagsphänomene an. Wähle bei jeder Teilaufgabe <strong>alle physikalisch korrekten Aussagen</strong> aus (Mehrfachauswahl). Achtung: Manche Aussagen klingen plausibel, sind aber physikalisch falsch!
+            </p>
+
+            <div class="space-y-6" id="denkaufgabe-container">
+                <!-- Teilaufgabe A: Ketchup -->
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl space-y-4 transition-colors" id="da-block-a">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🥫</span>
+                        <div>
+                            <span class="text-xs bg-orange-500/10 text-orange-400 font-bold px-2 py-0.5 rounded-full border border-orange-500/20">Teilaufgabe A</span>
+                            <span id="da-status-a" class="ml-2 text-xs font-bold text-slate-500">Offen ⭕</span>
+                        </div>
+                    </div>
+                    <h4 class="text-sm font-bold text-white">Die Ketchup-Flasche</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Man hält eine fast leere Ketchup-Flasche verkehrt herum, bewegt sie schnell nach unten und stoppt sie abrupt. Der Ketchup schießt heraus.</p>
+                    <div class="space-y-2" id="da-choices-a"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                        <span id="da-feedback-a" class="text-xs font-medium text-slate-500">Wähle mindestens eine Aussage aus.</span>
+                        <button onclick="checkDenkaufgabe('a')" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                    </div>
+                </div>
+
+                <!-- Teilaufgabe B: Stolpern -->
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl space-y-4 transition-colors" id="da-block-b">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🏃</span>
+                        <div>
+                            <span class="text-xs bg-orange-500/10 text-orange-400 font-bold px-2 py-0.5 rounded-full border border-orange-500/20">Teilaufgabe B</span>
+                            <span id="da-status-b" class="ml-2 text-xs font-bold text-slate-500">Offen ⭕</span>
+                        </div>
+                    </div>
+                    <h4 class="text-sm font-bold text-white">Das Stolpern</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Beim schnellen Laufen bleibt dein Fuß an einer Gehwegplatte hängen und wird abrupt gestoppt. Du fällst nach vorne.</p>
+                    <div class="space-y-2" id="da-choices-b"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                        <span id="da-feedback-b" class="text-xs font-medium text-slate-500">Wähle mindestens eine Aussage aus.</span>
+                        <button onclick="checkDenkaufgabe('b')" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                    </div>
+                </div>
+
+                <!-- Teilaufgabe C: Voyager -->
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl space-y-4 transition-colors" id="da-block-c">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🛰️</span>
+                        <div>
+                            <span class="text-xs bg-orange-500/10 text-orange-400 font-bold px-2 py-0.5 rounded-full border border-orange-500/20">Teilaufgabe C</span>
+                            <span id="da-status-c" class="ml-2 text-xs font-bold text-slate-500">Offen ⭕</span>
+                        </div>
+                    </div>
+                    <h4 class="text-sm font-bold text-white">Voyager im Weltraum</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Die NASA-Sonde Voyager 1 fliegt seit fast 50 Jahren ohne Treibstoff durchs All und wird dabei nicht langsamer.</p>
+                    <div class="space-y-2" id="da-choices-c"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                        <span id="da-feedback-c" class="text-xs font-medium text-slate-500">Wähle mindestens eine Aussage aus.</span>
+                        <button onclick="checkDenkaufgabe('c')" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                    </div>
+                </div>
+            </div>
+
+            <p id="da-global-solved" class="hidden mt-2 text-emerald-400 font-bold text-xs flex items-center gap-1.5">
+                ✓ Hervorragend! Du kannst den Trägheitssatz erfolgreich auf neue Situationen übertragen.
+            </p>
+
+            <!-- Lückentext: LKW-Bremsvorgang (erscheint nach den Denkaufgaben) -->
+            <div id="sec4-lueckentext" class="hidden bg-slate-900/50 border border-slate-700 p-5 rounded-2xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🚛</span>
+                        <span class="text-xs bg-violet-500/10 text-violet-400 font-bold px-2 py-0.5 rounded-full border border-violet-500/20">Bonus: Lückentext</span>
+                    </div>
+                    <span id="s4lt-status" class="text-xs font-bold text-slate-500">Offen ⭕</span>
+                </div>
+                <h4 class="text-sm font-bold text-white">Erkläre den Bremsvorgang beim LKW</h4>
+                <p class="text-[11px] text-slate-500">Wähle aus den Dropdowns die jeweils passenden Begriffe aus.</p>
+
+                <div class="text-sm text-slate-300 leading-loose space-y-3">
+                    <p>
+                        Wenn ein LKW abrupt abbremst, wirkt die verzögernde Bremskraft der Straße direkt auf das
+                        <select id="s4lt-g1" class="mx-1 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-violet-500"></select>.
+                        Auf das lose liegende Paket auf der Ladefläche wirkt im ersten Moment keine bremsende Kraft, außer der
+                        <select id="s4lt-g2" class="mx-1 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-violet-500"></select>
+                        zwischen dem Paket und der Ladefläche.
+                    </p>
+                    <p>
+                        Wenn diese Reibungskraft jedoch zu klein ist, um die nötige Verzögerung aufzubringen, verharrt das Paket in horizontaler Richtung nahezu im
+                        <select id="s4lt-g3" class="mx-1 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-violet-500"></select>
+                        (die Summe der auf es wirkenden Kräfte ist fast null).
+                        Während das Fahrzeug also stark verzögert wird, bewegt sich das Paket im Vergleich zum LKW weiter nach
+                        <select id="s4lt-g4" class="mx-1 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-violet-500"></select>.
+                    </p>
+                    <p>
+                        Dieses Verhalten beschreibt der berühmte
+                        <select id="s4lt-g5" class="mx-1 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-violet-500"></select>
+                        (auch 1. Newtonsches Axiom genannt). Er besagt, dass ein Körper in seinem Zustand der Ruhe oder der
+                        <select id="s4lt-g6" class="mx-1 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white font-bold text-sm focus:outline-none focus:border-violet-500"></select>
+                        Bewegung verharrt, solange keine resultierende äußere Kraft auf ihn einwirkt.
+                    </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                    <span id="s4lt-feedback" class="text-xs text-slate-500">Wähle die passenden Begriffe und klicke auf Prüfen.</span>
+                    <button onclick="checkSec4Lt()" class="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-800 hidden" id="sec-4-next-btn-box">
+                <button onclick="solveStep4()" class="py-2 px-5 btn-orange text-white font-bold rounded-xl text-xs">
+                    Weiter zum Rechnen ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Sektion 5: Rechenaufgabe -->
+        <section id="sec-5" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 5: Angewandtes Rechnen
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-5">🔒 Gesperrt</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Rechnung: Bremsverzögerung</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-green-500/8 border border-green-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-green-500/15 border border-green-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <rect x="5" y="3" width="22" height="26" rx="2" fill="#14532d" stroke="#16a34a" stroke-width="1.3"/>
+                  <rect x="7" y="5" width="18" height="7" rx="1.5" fill="#bbf7d0"/>
+                  <text x="16" y="10.5" text-anchor="middle" fill="#14532d" font-size="6" font-weight="bold">25 m/s</text>
+                  <rect x="7" y="14" width="5" height="4" rx="1" fill="#4ade80"/>
+                  <rect x="13.5" y="14" width="5" height="4" rx="1" fill="#4ade80"/>
+                  <rect x="20" y="14" width="5" height="4" rx="1" fill="#ef4444"/>
+                  <rect x="7" y="20" width="5" height="4" rx="1" fill="#86efac"/>
+                  <rect x="13.5" y="20" width="5" height="4" rx="1" fill="#86efac"/>
+                  <rect x="20" y="20" width="5" height="4" rx="1" fill="#22c55e"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-green-500 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Einzelarbeit</p>
+                <p class="text-xs font-bold text-green-300">Selbstständig Rechnen</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Ein Lieferwagen fährt mit einer Geschwindigkeit von \(v = 90\,\text{km/h}\). Plötzlich bremst der Fahrer ab. Der Bremsvorgang dauert \(\Delta t = 2{,}5\,\text{s}\) bis zum Stillstand.
+                <br>
+                <em>Hinweis: Achte bei der Eingabe der Ergebnisse unbedingt auf die korrekten physikalischen <strong>gültigen Stellen (signifikante Ziffern)</strong>! Der Taschenrechner unten rechts hilft dir.</em>
+            </p>
+
+            <div class="space-y-4">
+                <!-- Subtask A -->
+                <div class="p-4 bg-slate-900/40 border border-slate-850 rounded-2xl space-y-3">
+                    <label class="text-xs font-bold text-slate-300 block">
+                        Aufgabe A: Wandle die Geschwindigkeit \(v\) in die SI-Einheit \(\text{m/s}\) um.
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="input-calc-a" autocomplete="off" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500 w-40 font-mono" placeholder="Zahlwert...">
+                        <span class="text-xs text-slate-400">m/s</span>
+                        <button onclick="checkCalcA()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition">
+                            Prüfen
+                        </button>
+                    </div>
+                    <p id="feedback-calc-a" class="text-[11px] hidden font-bold"></p>
+                </div>
+
+                <!-- Subtask B -->
+                <div class="p-4 bg-slate-900/40 border border-slate-850 rounded-2xl space-y-3 hidden" id="box-calc-b">
+                    <label class="text-xs font-bold text-slate-300 block">
+                        Aufgabe B: Berechne die mittlere Beschleunigung (bzw. Verzögerung) \(a\) des Lkws während des Bremsens.
+                        <br>
+                        Formel: \(a = \frac{\Delta v}{\Delta t}\) (Gib den reinen Betrag an). Runden auf korrekte signifikante Ziffern!
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="input-calc-b" autocomplete="off" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500 w-40 font-mono" placeholder="Zahlwert...">
+                        <span class="text-xs text-slate-400">m/s²</span>
+                        <button onclick="checkCalcB()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition">
+                            Prüfen
+                        </button>
+                    </div>
+                    <p id="feedback-calc-b" class="text-[11px] hidden font-bold"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-800 hidden" id="sec-5-next-btn-box">
+                <button onclick="solveStep5()" class="py-2 px-5 btn-orange text-white font-bold rounded-xl text-xs">
+                    Weiter zum Hefteintrag ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Sektion 6: Hefteintrag -->
+        <section id="sec-6" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 6: Hefteintrag vervollständigen
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-6">🔒 Gesperrt</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Dein digitaler Hefteintrag</h2>
+
+            <!-- Arbeitsform Hefteintrag — prominent -->
+            <div class="flex items-center gap-5 px-5 py-4 bg-amber-950/50 border-2 border-amber-500/50 rounded-2xl shadow-lg shadow-amber-950/20">
+              <div class="shrink-0 w-16 h-16 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                <svg viewBox="0 0 44 44" width="40" height="40" fill="none">
+                  <!-- Notebook body -->
+                  <rect x="6" y="3" width="24" height="36" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                  <!-- Binding strip -->
+                  <rect x="4" y="3" width="7" height="36" rx="1.5" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+                  <!-- Spiral holes -->
+                  <circle cx="7.5" cy="9" r="2.2" fill="#fef9c3" stroke="#b45309" stroke-width="1.1"/>
+                  <circle cx="7.5" cy="17" r="2.2" fill="#fef9c3" stroke="#b45309" stroke-width="1.1"/>
+                  <circle cx="7.5" cy="25" r="2.2" fill="#fef9c3" stroke="#b45309" stroke-width="1.1"/>
+                  <circle cx="7.5" cy="33" r="2.2" fill="#fef9c3" stroke="#b45309" stroke-width="1.1"/>
+                  <!-- Page lines -->
+                  <line x1="14" y1="11" x2="27" y2="11" stroke="#fcd34d" stroke-width="1.2"/>
+                  <line x1="14" y1="16" x2="27" y2="16" stroke="#fcd34d" stroke-width="1.2"/>
+                  <line x1="14" y1="21" x2="27" y2="21" stroke="#fcd34d" stroke-width="1.2"/>
+                  <line x1="14" y1="26" x2="27" y2="26" stroke="#fcd34d" stroke-width="1.2"/>
+                  <line x1="14" y1="31" x2="22" y2="31" stroke="#fcd34d" stroke-width="1.2"/>
+                  <!-- Pencil (right side, vertical) -->
+                  <rect x="34" y="5" width="7" height="22" rx="1.5" fill="#fde68a" stroke="#d97706" stroke-width="1.2"/>
+                  <rect x="34" y="5" width="7" height="5" rx="1.5" fill="#fca5a5" stroke="#d97706" stroke-width="1"/>
+                  <line x1="34" y1="10" x2="41" y2="10" stroke="#d97706" stroke-width="0.8"/>
+                  <polygon points="34,27 41,27 37.5,36" fill="#92400e"/>
+                  <polygon points="35.5,33 37.5,36 39.5,33" fill="#f5f0e0"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none mb-1">✏️ Arbeitsform · Einzelarbeit</p>
+                <p class="text-base font-black text-amber-300 leading-tight">Hefteintrag abschreiben!</p>
+                <p class="text-xs text-amber-400/80 mt-0.5">Übertrage den vollständigen Eintrag sorgfältig in dein Physik-Heft.</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Klicke auf die Begriffe in der Wortwolke und setze sie an den passenden Stellen im Heft auf. Wenn alles richtig ist, kannst du das Dokument ausdrucken oder als PDF speichern!
+            </p>
+
+            <!-- Wortwolke -->
+            <div class="word-bank" id="word-bank">
+                <span class="word-chip" data-word="Kraft">Kraft</span>
+                <span class="word-chip" data-word="Bewegung">Bewegung</span>
+                <span class="word-chip" data-word="Geschwindigkeit">Geschwindigkeit</span>
+                <span class="word-chip" data-word="träge">träge</span>
+                <span class="word-chip" data-word="Bewegungsänderung">Bewegungsänderung</span>
+                <span class="word-chip" data-word="Energie">Energie</span>
+                <span class="word-chip" data-word="Temperatur">Temperatur</span>
+            </div>
+
+            <!-- Interaktives Heft -->
+            <div class="notebook-page space-y-4 select-none relative" id="notebook-print-area">
+                <span class="absolute top-2 right-2 border-2 border-orange-500 text-orange-600 font-extrabold text-[10px] uppercase tracking-widest px-2 py-0.5 rounded rotate-12">
+                    Heftübernahme
+                </span>
+
+                <h3 class="text-lg font-bold text-slate-900 underline decoration-2">Trägheitssatz</h3>
+
+                <!-- Definition (rote Umrandung) -->
+                <div class="border-2 border-rose-500 bg-rose-50 p-3 rounded-xl">
+                    <p class="font-serif text-sm italic text-slate-800 leading-relaxed">
+                        Wirkt auf einen Körper keine resultierende
+                        <span class="underline-blank" id="blank-1" data-target="Kraft">???</span>,
+                        so ändert sich seine
+                        <span class="underline-blank" id="blank-2" data-target="Bewegung">???</span>
+                        nicht (a = 0) und er behält seine
+                        <span class="underline-blank" id="blank-3" data-target="Geschwindigkeit">???</span>
+                        bei.
+                    </p>
+                </div>
+
+                <!-- Skizze: Situationen im Kräftegleichgewicht -->
+                <div>
+                    <p class="text-sm font-bold text-slate-800 mb-2">Bsp: Situationen im Kräftegleichgewicht</p>
+
+                    <svg viewBox="0 0 455 122" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+                        <!-- ===== LINKES BILD: vor dem Bremsen ===== -->
+                        <text x="10" y="12" font-size="8.5" font-weight="bold" fill="#475569">vor dem Bremsen</text>
+                        <!-- Fahrzeug -->
+                        <rect x="8" y="82" width="108" height="20" rx="3" fill="#e2e8f0" stroke="#334155" stroke-width="1.5"/>
+                        <circle cx="26" cy="102" r="9" fill="white" stroke="#334155" stroke-width="1.5"/>
+                        <circle cx="98" cy="102" r="9" fill="white" stroke="#334155" stroke-width="1.5"/>
+                        <line x1="22" y1="98" x2="30" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <line x1="30" y1="98" x2="22" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <line x1="94" y1="98" x2="102" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <line x1="102" y1="98" x2="94" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <!-- Strichmännchen (blau) -->
+                        <circle cx="62" cy="55" r="8" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="62" y1="63" x2="62" y2="82" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="49" y1="71" x2="75" y2="71" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="62" y1="82" x2="51" y2="95" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="62" y1="82" x2="73" y2="95" stroke="#3b82f6" stroke-width="1.5"/>
+                        <!-- Angriffspunkt F_Sitz + F_G -->
+                        <line x1="59" y1="69" x2="65" y2="75" stroke="#94a3b8" stroke-width="1.4"/>
+                        <line x1="65" y1="69" x2="59" y2="75" stroke="#94a3b8" stroke-width="1.4"/>
+                        <!-- F_Sitz (nach oben, 30px) -->
+                        <line x1="62" y1="72" x2="62" y2="42" stroke="#94a3b8" stroke-width="1.3"/>
+                        <polygon points="62,40 59,46 65,46" fill="#94a3b8"/>
+                        <text x="65" y="50" font-size="7.5" fill="#94a3b8" font-style="italic">F<tspan dy="2" font-size="5.5">Sitz</tspan></text>
+                        <!-- F_G (nach unten, 30px) -->
+                        <line x1="62" y1="72" x2="62" y2="102" stroke="#94a3b8" stroke-width="1.3"/>
+                        <polygon points="62,104 59,98 65,98" fill="#94a3b8"/>
+                        <text x="65" y="100" font-size="7.5" fill="#94a3b8" font-style="italic">F<tspan dy="2" font-size="5.5">G</tspan></text>
+                        <!-- Geschwindigkeitspfeil (an Fahrzeugfront) -->
+                        <text x="116" y="80" font-size="7.5" font-weight="bold" fill="#1e293b">v = v<tspan dy="2" font-size="5.5">A</tspan></text>
+                        <line x1="113" y1="89" x2="119" y2="95" stroke="#1e293b" stroke-width="1.4"/>
+                        <line x1="119" y1="89" x2="113" y2="95" stroke="#1e293b" stroke-width="1.4"/>
+                        <line x1="116" y1="92" x2="155" y2="92" stroke="#1e293b" stroke-width="1.6"/>
+                        <polygon points="157,92 151,89 151,95" fill="#1e293b"/>
+
+                        <!-- ===== MITTE: abruptes Bremsen ===== -->
+                        <text x="164" y="63" font-size="7" fill="#dc2626" font-weight="bold">abruptes</text>
+                        <text x="164" y="73" font-size="7" fill="#dc2626" font-weight="bold">Bremsen:</text>
+                        <line x1="168" y1="78" x2="195" y2="78" stroke="#dc2626" stroke-width="1.5"/>
+                        <polygon points="197,78 191,75 191,81" fill="#dc2626"/>
+
+                        <!-- ===== RECHTES BILD: nach dem Bremsen ===== -->
+                        <text x="207" y="12" font-size="8.5" font-weight="bold" fill="#475569">nach dem Bremsen</text>
+                        <!-- Fahrzeug -->
+                        <rect x="205" y="82" width="108" height="20" rx="3" fill="#e2e8f0" stroke="#334155" stroke-width="1.5"/>
+                        <circle cx="223" cy="102" r="9" fill="white" stroke="#334155" stroke-width="1.5"/>
+                        <circle cx="295" cy="102" r="9" fill="white" stroke="#334155" stroke-width="1.5"/>
+                        <line x1="219" y1="98" x2="227" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <line x1="227" y1="98" x2="219" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <line x1="291" y1="98" x2="299" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <line x1="299" y1="98" x2="291" y2="106" stroke="#334155" stroke-width="0.8"/>
+                        <!-- Strichmännchen (blau) -->
+                        <circle cx="259" cy="55" r="8" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="259" y1="63" x2="259" y2="82" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="246" y1="71" x2="272" y2="71" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="259" y1="82" x2="248" y2="95" stroke="#3b82f6" stroke-width="1.5"/>
+                        <line x1="259" y1="82" x2="270" y2="95" stroke="#3b82f6" stroke-width="1.5"/>
+                        <!-- Angriffspunkt F_Bremse (Bodenkontakt linker Reifen) -->
+                        <line x1="220" y1="108" x2="226" y2="114" stroke="#dc2626" stroke-width="1.4"/>
+                        <line x1="226" y1="108" x2="220" y2="114" stroke="#dc2626" stroke-width="1.4"/>
+                        <!-- F_Bremse (rot, nach links, am Reifen) -->
+                        <line x1="223" y1="111" x2="196" y2="111" stroke="#dc2626" stroke-width="1.5"/>
+                        <polygon points="194,111 200,108 200,114" fill="#dc2626"/>
+                        <text x="191" y="120" font-size="7" fill="#dc2626" font-style="italic" font-weight="bold">F<tspan dy="2" font-size="5">Bremse</tspan></text>
+                        <!-- Angriffspunkt F_Reib (Fußspitze) -->
+                        <line x1="267" y1="92" x2="273" y2="98" stroke="#475569" stroke-width="1.4"/>
+                        <line x1="273" y1="92" x2="267" y2="98" stroke="#475569" stroke-width="1.4"/>
+                        <!-- F_Reib (klein, nach links, an der Fußspitze) -->
+                        <line x1="270" y1="95" x2="254" y2="95" stroke="#475569" stroke-width="1.2"/>
+                        <polygon points="252,95 258,92 258,98" fill="#475569"/>
+                        <text x="243" y="90" font-size="7" fill="#475569" font-style="italic">F<tspan dy="2" font-size="5">Reib</tspan></text>
+                        <!-- v_Auto: kurzer Pfeil (rot, an Fahrzeugfront) -->
+                        <line x1="310" y1="89" x2="316" y2="95" stroke="#dc2626" stroke-width="1.4"/>
+                        <line x1="316" y1="89" x2="310" y2="95" stroke="#dc2626" stroke-width="1.4"/>
+                        <line x1="313" y1="92" x2="328" y2="92" stroke="#dc2626" stroke-width="1.5"/>
+                        <polygon points="330,92 324,89 324,95" fill="#dc2626"/>
+                        <text x="332" y="96" font-size="7" fill="#dc2626" font-weight="bold">v<tspan dy="2" font-size="5">Auto</tspan><tspan dy="-2"> &lt; v</tspan><tspan dy="2" font-size="5">A</tspan></text>
+                        <!-- v_Person: langer Pfeil (dunkel, am Kopf) -->
+                        <line x1="264" y1="52" x2="270" y2="58" stroke="#1e293b" stroke-width="1.4"/>
+                        <line x1="270" y1="52" x2="264" y2="58" stroke="#1e293b" stroke-width="1.4"/>
+                        <line x1="267" y1="55" x2="297" y2="55" stroke="#1e293b" stroke-width="1.8"/>
+                        <polygon points="299,55 293,52 293,58" fill="#1e293b"/>
+                        <text x="301" y="59" font-size="7.5" fill="#1e293b" font-weight="bold">v<tspan dy="2" font-size="5">Person</tspan><tspan dy="-2"> ≈ v</tspan><tspan dy="2" font-size="5">A</tspan></text>
+
+                    </svg>
+
+                    <p class="text-xs text-slate-600 leading-relaxed mt-1.5 pl-2 border-l-2 border-slate-300 italic">
+                        geringer Kontakt &#8658; kleinere bremsende Kraft auf Fahrer als auf Auto &#8658; Fahrer bewegt sich schneller als Auto weiter
+                    </p>
+                </div>
+
+                <!-- Trägheit-Definition -->
+                <div class="space-y-2">
+                    <p class="text-sm text-slate-800">
+                        „TRÄGHEIT": Masse verhält sich
+                        <span class="underline-blank" id="blank-4" data-target="träge">???</span>,
+                        denn:
+                    </p>
+                    <div class="border-2 border-rose-500 bg-rose-50 p-3 rounded-xl">
+                        <p class="font-serif text-sm italic text-slate-800">
+                            ohne einwirkende Kraft keine
+                            <span class="underline-blank" id="blank-5" data-target="Bewegungsänderung">???</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <p id="heft-feedback" class="text-xs text-emerald-400 font-bold hidden">✓ Hervorragend! Der Hefteintrag ist vollständig gelöst.</p>
+
+            <div class="flex flex-wrap justify-end items-center gap-3 pt-4 border-t border-slate-800">
+                <div class="flex gap-2">
+                    <a href="index.html" class="py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold rounded-xl text-xs transition">
+                        ← Zurück zur Übersicht
+                    </a>
+                    <button onclick="openSec7()" id="btn-to-sec7" class="py-2.5 px-5 btn-orange text-white font-bold rounded-xl text-xs hidden">
+                        ✓ Abgeschrieben – Weiter zu Schritt 7 ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sektion 7: Weitere Übungsaufgaben -->
+        <section id="sec-7" class="glass-panel p-6 md:p-8 shadow-xl space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                    Schritt 7: Weitere Übungsaufgaben
+                </span>
+                <span class="text-xs text-slate-400" id="badge-status-7">🔒 Gesperrt</span>
+            </div>
+
+            <h2 class="text-2xl font-black text-white">Übungsaufgaben zur Vertiefung</h2>
+
+            <!-- Arbeitsform -->
+            <div class="flex items-center gap-3 px-3 py-2.5 bg-emerald-500/8 border border-emerald-500/20 rounded-xl">
+              <div class="shrink-0 w-10 h-10 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                  <rect x="4" y="7" width="24" height="23" rx="2" fill="#14532d" stroke="#10b981" stroke-width="1.3"/>
+                  <rect x="11" y="4" width="10" height="7" rx="1.5" fill="#34d399" stroke="#10b981" stroke-width="1.3"/>
+                  <rect x="13" y="5" width="6" height="3.5" rx="1" fill="#f0fdf4"/>
+                  <circle cx="10" cy="15" r="2.5" fill="#10b981"/>
+                  <path d="M8.8 15 L9.8 16.2 L11.5 13.8" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="14" y1="15" x2="24" y2="15" stroke="#34d399" stroke-width="1.2"/>
+                  <circle cx="10" cy="21" r="2.5" fill="#34d399" stroke="#10b981" stroke-width="1"/>
+                  <line x1="14" y1="21" x2="24" y2="21" stroke="#34d399" stroke-width="1.2"/>
+                  <circle cx="10" cy="27" r="2.5" fill="#34d399" stroke="#10b981" stroke-width="1"/>
+                  <line x1="14" y1="27" x2="24" y2="27" stroke="#34d399" stroke-width="1.2"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-0.5">Arbeitsform · Einzelarbeit</p>
+                <p class="text-xs font-bold text-emerald-300">Selbstständig Üben</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                Wende den Trägheitssatz und dein Wissen über Bremsvorgänge auf weitere Aufgaben an. Achte bei Rechenaufgaben weiterhin auf gültige Stellen und korrekte Einheiten.
+            </p>
+
+            <!-- Aufgabe C: Neues Szenario (Zug) -->
+            <div class="p-4 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-4" id="box-calc-d">
+                <p class="text-xs font-bold text-slate-300">
+                    Aufgabe C: Ein Zug fährt mit \(v_0 = 54\,\text{km/h}\) und bremst in \(\Delta t = 12\,\text{s}\) gleichmäßig auf Stillstand.
+                </p>
+                <div class="space-y-3" id="box-calc-d1">
+                    <label class="text-xs font-bold text-slate-400 block">C.1 – Wandle \(v_0 = 54\,\text{km/h}\) in die SI-Einheit \(\text{m/s}\) um.</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="input-calc-d1" autocomplete="off" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500 w-40 font-mono" placeholder="Zahlwert...">
+                        <span class="text-xs text-slate-400">m/s</span>
+                        <button onclick="checkCalcD1()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition">Prüfen</button>
+                    </div>
+                    <p id="feedback-calc-d1" class="text-[11px] hidden font-bold"></p>
+                </div>
+                <div class="space-y-3 hidden" id="box-calc-d2">
+                    <label class="text-xs font-bold text-slate-400 block">C.2 – Berechne die Bremsverzögerung \(a\) des Zuges. Formel: \(a = \dfrac{\Delta v}{\Delta t}\)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="input-calc-d2" autocomplete="off" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500 w-40 font-mono" placeholder="Zahlwert...">
+                        <span class="text-xs text-slate-400">m/s²</span>
+                        <button onclick="checkCalcD2()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition">Prüfen</button>
+                    </div>
+                    <p id="feedback-calc-d2" class="text-[11px] hidden font-bold"></p>
+                </div>
+            </div>
+
+            <!-- Zuordnungsaufgabe -->
+            <div class="p-4 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-4 hidden" id="box-zuordnung">
+                <h4 class="text-sm font-bold text-white">Zuordnungsaufgabe: Trägheit oder andere Ursache?</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Ordne jedem Phänomen zu, ob der <strong>Trägheitssatz</strong> die Beobachtung erklärt oder ob eine <strong>andere Kraft/Ursache</strong> direkt verantwortlich ist. Mehrere Phänomene können zur selben Kategorie gehören.</p>
+                <div class="space-y-3" id="zuordnung-items">
+                    <!-- Wird per JS befüllt -->
+                </div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                    <span id="feedback-zuordnung" class="text-xs font-medium text-slate-500">Ordne zunächst alle Phänomene zu.</span>
+                    <button onclick="checkZuordnung()" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Überprüfen</button>
+                </div>
+            </div>
+
+            <!-- MC-Set: 3 × Multiple Response -->
+            <div class="space-y-4 hidden" id="box-mcset">
+                <h4 class="text-sm font-bold text-white">Wissenstest: Multiple Response</h4>
+                <p class="text-xs text-slate-400">Wähle bei jeder Frage <strong>alle</strong> physikalisch korrekten Aussagen aus.</p>
+
+                <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-3" id="mcset-block-1">
+                    <p class="text-xs font-bold text-slate-300">Frage 1: Welche Aussagen beschreiben den Trägheitssatz korrekt?</p>
+                    <div class="space-y-2" id="mcset-choices-1"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                        <span id="mcset-feedback-1" class="text-xs font-medium text-slate-500">Wähle mindestens eine Aussage.</span>
+                        <button onclick="checkMCSetQ(1)" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-3" id="mcset-block-2">
+                    <p class="text-xs font-bold text-slate-300">Frage 2: Welche Schlussfolgerungen folgen direkt aus dem Trägheitssatz?</p>
+                    <div class="space-y-2" id="mcset-choices-2"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                        <span id="mcset-feedback-2" class="text-xs font-medium text-slate-500">Wähle mindestens eine Aussage.</span>
+                        <button onclick="checkMCSetQ(2)" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl space-y-3" id="mcset-block-3">
+                    <p class="text-xs font-bold text-slate-300">Frage 3: In welchen Situationen ist der Trägheitssatz direkt erkennbar?</p>
+                    <div class="space-y-2" id="mcset-choices-3"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-slate-800">
+                        <span id="mcset-feedback-3" class="text-xs font-medium text-slate-500">Wähle mindestens eine Aussage.</span>
+                        <button onclick="checkMCSetQ(3)" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Prüfen</button>
+                    </div>
+                </div>
+            </div>
+
+            <p id="sec7-global-solved" class="hidden text-emerald-400 font-bold text-xs">
+                ✓ Alle Zusatzaufgaben abgeschlossen! Du hast das gesamte Lernmodul erfolgreich bearbeitet.
+            </p>
+
+            <div class="flex justify-end pt-4 border-t border-slate-800 hidden" id="sec-7-finish">
+                <a href="index.html" class="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">
+                    Lerneinheit abschließen ✓
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-[10px] text-slate-500 font-medium">
+        <p>&copy; 2026 Physik interaktiv. Lerneinheit 8.3 Mechanik &bull; Gymnasium Bayern</p>
+    </footer>
+
+    <!-- Tracker und Rechner Skripte einbinden (Firebase läuft im LocalStorage-Mock-Modus) -->
+    <script src="firebase-config.js"></script>
+    <script src="progress-tracker.js"></script>
+    <script src="calculator.js"></script>
+
+    <script>
+        // --- Variablen für das Lernmodul ---
+        window.TOTAL_TASKS = 8; // simulation, kitutor, calca, calcb, lueckentext, calcd, zuordnung, mcset
+
+        let simCount = 0;
+        let isSimRunning = false;
+        let activeWord = null;
+        let activeWordEl = null;
+
+        // --- Initialisierung ---
+        document.addEventListener('DOMContentLoaded', () => {
+            ProgressTracker.init('traegheitssatz');
+
+            // Einmalige Migration: alten KI-Tutor-Fortschritt löschen, damit Denkaufgaben neu lösbar sind
+            if (!localStorage.getItem('ts_migrated_v2')) {
+                ProgressTracker.updateTask('kitutor', false);
+                localStorage.setItem('ts_migrated_v2', '1');
+            }
+
+            // Denkaufgaben (Sektion 4) aufbauen
+            buildDenkaufgabe();
+
+            // Lese Zustand aus dem Tracker
+            restoreProgress();
+
+            // Shortcut registrieren
+            window.addEventListener('bypass-task', () => {
+                bypassActiveStep();
+            });
+
+            // Lehrer-Reset: Ctrl+Shift+R löscht LocalStorage und lädt neu
+            window.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+                    e.preventDefault();
+                    if (confirm('Gesamten Fortschritt zurücksetzen und neu starten?')) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                }
+            });
+
+            // Falls das Passwort das gesamte Modul freischaltet
+            if (ProgressTracker.isPasswordUnlocked()) {
+                unlockAll();
+            }
+
+            // PDF-Anfrage von index.html: nur drucken, wenn der Hefteintrag schon fertig ist
+            if (new URLSearchParams(window.location.search).get('print') === '1') {
+                if (ProgressTracker.isSolved('lueckentext')) {
+                    document.getElementById('sec-6').scrollIntoView();
+                    setTimeout(() => window.print(), 400);
+                } else {
+                    alert('Schließe zuerst den Hefteintrag (Schritt 6) ab, dann kannst du ihn hier als PDF speichern oder ausdrucken.');
+                }
+            }
+        });
+
+        function updateProgressBar() {
+            const progress = ProgressTracker.progress;
+            const solved = Object.values(progress).filter(Boolean).length;
+            const percent = Math.min(100, Math.round((solved / window.TOTAL_TASKS) * 100));
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        function restoreProgress() {
+            updateProgressBar();
+            
+            // Sektion 1 ist immer offen
+            if (ProgressTracker.isSolved('step1')) {
+                document.getElementById('badge-status-1').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-1').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('sec-2').classList.remove('hidden');
+                document.getElementById('badge-status-2').textContent = '🔴 Offen';
+                document.getElementById('badge-status-2').className = 'text-xs text-slate-400';
+            }
+
+            if (ProgressTracker.isSolved('simulation')) {
+                document.getElementById('badge-status-2').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-2').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('sec-logik').classList.remove('hidden');
+                buildLogikCheck();
+                document.getElementById('sec-3').classList.remove('hidden');
+                document.getElementById('badge-status-3').textContent = '🔴 Offen';
+                document.getElementById('badge-status-3').className = 'text-xs text-slate-400';
+            }
+
+            if (ProgressTracker.isSolved('step3')) {
+                document.getElementById('badge-status-3').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-3').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('sec-4').classList.remove('hidden');
+                document.getElementById('badge-status-4').textContent = '🔴 Offen';
+                document.getElementById('badge-status-4').className = 'text-xs text-slate-400';
+            }
+
+            if (ProgressTracker.isSolved('kitutor')) {
+                document.getElementById('badge-status-4').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-4').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('da-global-solved').classList.remove('hidden');
+                ['a', 'b', 'c'].forEach(key => {
+                    const block = document.getElementById('da-block-' + key);
+                    if (block) {
+                        block.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+                        block.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                    }
+                    const status = document.getElementById('da-status-' + key);
+                    if (status) {
+                        status.textContent = 'Gelöst ✅';
+                        status.className = 'ml-2 text-xs font-bold text-emerald-400';
+                    }
+                });
+                document.getElementById('sec4-lueckentext').classList.remove('hidden');
+                buildSec4Lt();
+                document.getElementById('sec-4-next-btn-box').classList.remove('hidden');
+
+                document.getElementById('sec-5').classList.remove('hidden');
+                document.getElementById('badge-status-5').textContent = '🔴 Offen';
+                document.getElementById('badge-status-5').className = 'text-xs text-slate-400';
+            }
+
+            if (ProgressTracker.isSolved('calca')) {
+                document.getElementById('input-calc-a').value = '25';
+                document.getElementById('input-calc-a').disabled = true;
+                document.getElementById('feedback-calc-a').textContent = '✓ Korrekt! 90 km/h = (90 / 3,6) m/s = 25 m/s (2 gültige Stellen)';
+                document.getElementById('feedback-calc-a').className = 'text-[11px] text-emerald-400 font-bold';
+                document.getElementById('feedback-calc-a').classList.remove('hidden');
+                document.getElementById('box-calc-b').classList.remove('hidden');
+            }
+
+            if (ProgressTracker.isSolved('calcb')) {
+                document.getElementById('input-calc-b').value = '10';
+                document.getElementById('input-calc-b').disabled = true;
+                document.getElementById('feedback-calc-b').textContent = '✓ Korrekt! 25 m/s / 2,5 s = 10 m/s² (2 gültige Stellen)';
+                document.getElementById('feedback-calc-b').className = 'text-[11px] text-emerald-400 font-bold';
+                document.getElementById('feedback-calc-b').classList.remove('hidden');
+                
+                document.getElementById('sec-5-next-btn-box').classList.remove('hidden');
+                document.getElementById('badge-status-5').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-5').className = 'text-xs text-emerald-400 font-bold';
+                
+                document.getElementById('sec-6').classList.remove('hidden');
+                document.getElementById('badge-status-6').textContent = '🔴 Offen';
+                document.getElementById('badge-status-6').className = 'text-xs text-slate-400';
+            }
+
+            if (ProgressTracker.isSolved('lueckentext')) {
+                document.getElementById('badge-status-6').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-6').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('heft-feedback').classList.remove('hidden');
+                document.getElementById('btn-to-sec7').classList.remove('hidden');
+
+                // Setze alle Lücken ein
+                document.querySelectorAll('.underline-blank').forEach(blank => {
+                    blank.textContent = blank.dataset.target;
+                    blank.classList.add('filled');
+                });
+
+                document.getElementById('sec-7').classList.remove('hidden');
+                document.getElementById('badge-status-7').textContent = '🔴 Offen';
+                document.getElementById('badge-status-7').className = 'text-xs text-slate-400';
+                buildZuordnung();
+                buildMCSet();
+            }
+
+            if (ProgressTracker.isSolved('calcd')) {
+                document.getElementById('input-calc-d1').value = '15';
+                document.getElementById('input-calc-d1').disabled = true;
+                document.getElementById('feedback-calc-d1').textContent = '✓ Korrekt! 54 km/h ÷ 3,6 = 15 m/s (2 gültige Stellen)';
+                document.getElementById('feedback-calc-d1').className = 'text-[11px] text-emerald-400 font-bold';
+                document.getElementById('feedback-calc-d1').classList.remove('hidden');
+                document.getElementById('box-calc-d2').classList.remove('hidden');
+                document.getElementById('input-calc-d2').value = '1,3';
+                document.getElementById('input-calc-d2').disabled = true;
+                document.getElementById('feedback-calc-d2').textContent = '✓ Korrekt! a = 15 m/s ÷ 12 s = 1,3 m/s² (2 gültige Stellen)';
+                document.getElementById('feedback-calc-d2').className = 'text-[11px] text-emerald-400 font-bold';
+                document.getElementById('feedback-calc-d2').classList.remove('hidden');
+                document.getElementById('box-zuordnung').classList.remove('hidden');
+            }
+
+            if (ProgressTracker.isSolved('zuordnung')) {
+                document.getElementById('feedback-zuordnung').textContent = '✓ Alle Phänomene korrekt zugeordnet!';
+                document.getElementById('feedback-zuordnung').className = 'text-xs font-bold text-emerald-400';
+                document.getElementById('box-zuordnung').querySelectorAll('button').forEach(btn => btn.disabled = true);
+                document.getElementById('box-mcset').classList.remove('hidden');
+            }
+
+            if (ProgressTracker.isSolved('mcset')) {
+                document.getElementById('sec7-global-solved').classList.remove('hidden');
+                document.getElementById('sec-7-finish').classList.remove('hidden');
+                document.getElementById('badge-status-7').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-7').className = 'text-xs text-emerald-400 font-bold';
+                [1, 2, 3].forEach(n => {
+                    document.getElementById('mcset-block-' + n).querySelectorAll('button').forEach(btn => btn.disabled = true);
+                });
+            }
+        }
+
+        function unlockAll() {
+            ProgressTracker.updateTask('step1', true);
+            ProgressTracker.updateTask('simulation', true);
+            ProgressTracker.updateTask('step3', true);
+            ProgressTracker.updateTask('kitutor', true);
+            ProgressTracker.updateTask('calca', true);
+            ProgressTracker.updateTask('calcb', true);
+            ProgressTracker.updateTask('lueckentext', true);
+            ProgressTracker.updateTask('calcd', true);
+            ProgressTracker.updateTask('zuordnung', true);
+            ProgressTracker.updateTask('mcset', true);
+            restoreProgress();
+        }
+
+        // --- Sektion 1 lösen ---
+        function solveStep1() {
+            ProgressTracker.updateTask('step1', true);
+            document.getElementById('badge-status-1').textContent = '✅ Gelöst';
+            document.getElementById('badge-status-1').className = 'text-xs text-emerald-400 font-bold';
+            
+            document.getElementById('sec-2').classList.remove('hidden');
+            document.getElementById('badge-status-2').textContent = '🔴 Offen';
+            document.getElementById('badge-status-2').className = 'text-xs text-slate-400';
+            
+            document.getElementById('sec-2').scrollIntoView({ behavior: 'smooth' });
+            updateProgressBar();
+        }
+
+        // --- Sektion 3 lösen ---
+        function solveStep3() {
+            ProgressTracker.updateTask('step3', true);
+            document.getElementById('badge-status-3').textContent = '✅ Gelöst';
+            document.getElementById('badge-status-3').className = 'text-xs text-emerald-400 font-bold';
+            
+            document.getElementById('sec-4').classList.remove('hidden');
+            document.getElementById('badge-status-4').textContent = '🔴 Offen';
+            document.getElementById('badge-status-4').className = 'text-xs text-slate-400';
+            
+            document.getElementById('sec-4').scrollIntoView({ behavior: 'smooth' });
+            updateProgressBar();
+        }
+
+        // --- Sektion 4 lösen ---
+        function solveStep4() {
+            document.getElementById('sec-5').classList.remove('hidden');
+            document.getElementById('badge-status-5').textContent = '🔴 Offen';
+            document.getElementById('badge-status-5').className = 'text-xs text-slate-400';
+            
+            document.getElementById('sec-5').scrollIntoView({ behavior: 'smooth' });
+            updateProgressBar();
+        }
+
+        // --- Sektion 5 lösen ---
+        function solveStep5() {
+            document.getElementById('sec-6').classList.remove('hidden');
+            document.getElementById('badge-status-6').textContent = '🔴 Offen';
+            document.getElementById('badge-status-6').className = 'text-xs text-slate-400';
+            
+            document.getElementById('sec-6').scrollIntoView({ behavior: 'smooth' });
+            updateProgressBar();
+        }
+
+        // --- Geheimcode-Bypass ---
+        function bypassActiveStep() {
+            if (!ProgressTracker.isSolved('step1')) {
+                solveStep1();
+            } else if (!ProgressTracker.isSolved('simulation')) {
+                ProgressTracker.updateTask('simulation', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('step3')) {
+                document.getElementById('sec-logik').classList.remove('hidden');
+                buildLogikCheck();
+                document.getElementById('sec-3').classList.remove('hidden');
+                solveStep3();
+            } else if (!ProgressTracker.isSolved('kitutor')) {
+                ProgressTracker.updateTask('kitutor', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('calca')) {
+                ProgressTracker.updateTask('calca', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('calcb')) {
+                ProgressTracker.updateTask('calcb', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('lueckentext')) {
+                ProgressTracker.updateTask('lueckentext', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('calcd')) {
+                ProgressTracker.updateTask('calcd', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('zuordnung')) {
+                ProgressTracker.updateTask('zuordnung', true);
+                restoreProgress();
+            } else if (!ProgressTracker.isSolved('mcset')) {
+                ProgressTracker.updateTask('mcset', true);
+                restoreProgress();
+            }
+        }
+
+        function openSec7() {
+            document.getElementById('sec-7').classList.remove('hidden');
+            document.getElementById('badge-status-7').textContent = '🔴 Offen';
+            document.getElementById('badge-status-7').className = 'text-xs text-slate-400';
+            buildZuordnung();
+            buildMCSet();
+            document.getElementById('sec-7').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // --- PHYSIK-SIMULATION (CANVAS) ---
+        // ==========================================
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Parameter
+        let sim = {
+            xW: 60,
+            yW: 135,
+            wW: 130,
+            hW: 20,
+            vW: 4,
+            
+            xK: 60 + 50,
+            yK: 135 - 20,
+            wK: 20,
+            hK: 20,
+            vK: 4,
+            
+            status: 'fixed', // 'fixed', 'slipping', 'falling'
+            fallingVy: 0,
+            mu: 0.15,
+            mass: 50,
+            actionCount: 0,
+            roadOffset: 0,
+            isImpulseActive: false,
+            forceTimer: 0,
+            forceType: null
+        };
+
+        function resetSim() {
+            const speed = parseFloat(document.getElementById('slider-speed').value);
+            const friction = parseFloat(document.getElementById('select-friction').value);
+            const mass = parseFloat(document.getElementById('slider-mass').value);
+
+            sim.xW = 60;
+            sim.vW = speed;
+            sim.xK = 60 + 50;
+            sim.yK = 135 - 20;
+            sim.vK = speed;
+            sim.status = 'fixed';
+            sim.fallingVy = 0;
+            sim.mu = friction;
+            sim.mass = mass;
+            sim.isImpulseActive = false;
+            sim.forceTimer = 0;
+
+            // Verberge Fragenbox bei Reset
+            document.getElementById('sim-question-box').classList.add('hidden');
+        }
+
+        function triggerImpulse(type) {
+            if (sim.isImpulseActive) return;
+            sim.isImpulseActive = true;
+            sim.actionCount++;
+            sim.forceTimer = 200;
+            sim.forceType = type;
+            document.getElementById('val-count').textContent = Math.min(sim.actionCount, 3);
+
+            // Parameter holen
+            sim.mu = parseFloat(document.getElementById('select-friction').value);
+            sim.mass = parseFloat(document.getElementById('slider-mass').value);
+
+            document.getElementById('btnBrake').disabled = true;
+            document.getElementById('btnAccel').disabled = true;
+
+            if (type === 'brake') {
+                sim.vW = 0;
+                sim.status = 'slipping';
+            } else {
+                sim.vW = sim.vW + 8; // Ruckartige Beschleunigung
+                sim.status = 'slipping';
+            }
+
+            // Nach 2,5 Sekunden Abfrage auslösen, falls 3 Versuche erreicht sind
+            setTimeout(() => {
+                document.getElementById('btnBrake').disabled = false;
+                document.getElementById('btnAccel').disabled = false;
+
+                if (sim.actionCount >= 3 && !ProgressTracker.isSolved('simulation')) {
+                    showSimQuestion(type);
+                } else {
+                    // Falls noch keine 3 Versuche, fahre wieder normal weiter
+                    sim.isImpulseActive = false;
+                    resetSim();
+                }
+            }, 2500);
+        }
+
+        function updatePhysics() {
+            // LKW bewegt sich immer, außer wenn er abrupt abgebremst wurde
+            // Road Offset scrollt proportional zur LKW-Geschwindigkeit rückwärts
+            sim.roadOffset -= sim.vW * 1.5;
+            if (sim.roadOffset < -30) {
+                sim.roadOffset = 0;
+            }
+
+            // 1. Wagen bewegen
+            sim.xW += sim.vW * 1.5;
+
+            // Randumbruch für den Wagen
+            if (sim.xW > canvas.width) {
+                const diff = sim.xK - sim.xW;
+                sim.xW = -sim.wW;
+                if (sim.status !== 'falling') {
+                    sim.xK = sim.xW + diff;
+                }
+            }
+
+            // 2. Kiste bewegen
+            if (sim.status === 'fixed') {
+                // Kiste ist fest an den Wagen gekoppelt
+                if (!sim.isImpulseActive) {
+                    sim.vW = parseFloat(document.getElementById('slider-speed').value);
+                }
+                sim.vK = sim.vW;
+                sim.xK = sim.xW + 50;
+                sim.yK = sim.yW - sim.hK;
+            } else if (sim.status === 'slipping') {
+                const relativeV = sim.vK - sim.vW;
+                // Reibungsverzögerung berechnen (a = mu * g)
+                const g = 9.81;
+                const accel = sim.mu * g * 0.05; // zeitliche Skalierung
+
+                if (relativeV > 0.05) {
+                    sim.vK -= accel;
+                } else if (relativeV < -0.05) {
+                    sim.vK += accel;
+                } else {
+                    sim.vK = sim.vW;
+                    sim.status = 'fixed';
+                }
+
+                sim.xK += sim.vK * 1.5;
+
+                // Prüfe, ob die Kiste die Ladefläche verlässt (vorne oder hinten)
+                const relX = sim.xK - sim.xW;
+                if (relX < 0 || relX > sim.wW - sim.wK) {
+                    sim.status = 'falling';
+                }
+            } else if (sim.status === 'falling') {
+                // Horizontal: Keine resultierende Kraft (Newton 1)! vK bleibt konstant.
+                sim.xK += sim.vK * 1.5;
+                // Vertikal: Freier Fall
+                sim.fallingVy += 0.5;
+                sim.yK += sim.fallingVy;
+
+                // Auf Boden aufschlagen
+                if (sim.yK >= 170) {
+                    sim.yK = 170;
+                    sim.fallingVy = 0;
+                    // Reibung am Boden bremst sie schließlich ab
+                    sim.vK *= 0.92;
+                }
+            }
+
+            // Unabhängiger Randumbruch für die heruntergefallene Kiste
+            if (sim.xK > canvas.width) {
+                sim.xK = -sim.wK;
+            }
+        }
+
+        function drawVector(x, y, length, color, label) {
+            if (Math.abs(length) < 0.2) return;
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+
+            const endX = x + length * 10;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(endX, y);
+            ctx.stroke();
+
+            // Pfeilspitze
+            ctx.beginPath();
+            if (length > 0) {
+                ctx.moveTo(endX, y);
+                ctx.lineTo(endX - 5, y - 4);
+                ctx.lineTo(endX - 5, y + 4);
+            } else {
+                ctx.moveTo(endX, y);
+                ctx.lineTo(endX + 5, y - 4);
+                ctx.lineTo(endX + 5, y + 4);
+            }
+            ctx.fill();
+
+            ctx.font = '10px monospace';
+            ctx.fillText(label, endX + (length > 0 ? 5 : -25), y + 3);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Straße / Untergrund zeichnen (Graues Bett)
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 160, canvas.width, 60);
+
+            // Schienen-Linie / Obergrenze Straße
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 160);
+            ctx.lineTo(canvas.width, 160);
+            ctx.stroke();
+
+            // Laufende Straßenmarkierung (Dashed Line)
+            ctx.strokeStyle = '#f8fafc';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([15, 15]);
+            ctx.lineDashOffset = sim.roadOffset;
+            ctx.beginPath();
+            ctx.moveTo(0, 185);
+            ctx.lineTo(canvas.width, 185);
+            ctx.stroke();
+            ctx.setLineDash([]); // Zurücksetzen
+
+            // LKW / Gleiter zeichnen
+            ctx.fillStyle = '#1e3a8a';
+            ctx.fillRect(sim.xW, sim.yW, sim.wW, sim.hW);
+            
+            // Räder zeichnen mit rotierenden Speichen
+            let wheelRotation = sim.xW / 12; // Rotationswinkel proportional zum Weg
+
+            // Rad 1 (Vorne)
+            ctx.save();
+            ctx.translate(sim.xW + 20, sim.yW + sim.hW + 6);
+            ctx.rotate(wheelRotation);
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+            // Speichen zeichnen
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-8, 0); ctx.lineTo(8, 0);
+            ctx.moveTo(0, -8); ctx.lineTo(0, 8);
+            ctx.stroke();
+            ctx.restore();
+
+            // Rad 2 (Hinten)
+            ctx.save();
+            ctx.translate(sim.xW + sim.wW - 20, sim.yW + sim.hW + 6);
+            ctx.rotate(wheelRotation);
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+            // Speichen zeichnen
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-8, 0); ctx.lineTo(8, 0);
+            ctx.moveTo(0, -8); ctx.lineTo(0, 8);
+            ctx.stroke();
+            ctx.restore();
+
+            // Kiste zeichnen
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(sim.xK, sim.yK, sim.wK, sim.hK);
+            ctx.strokeStyle = '#78350f';
+            ctx.strokeRect(sim.xK, sim.yK, sim.wK, sim.hK);
+
+            // Geschwindigkeitsvektoren
+            drawVector(sim.xW + sim.wW/2, sim.yW + 10, sim.vW, '#f87171', 'v_W');
+            drawVector(sim.xK + sim.wK/2, sim.yK + 10, sim.vK, '#60a5fa', 'v_K');
+
+            // Kraftvektoren (für ~3 s nach Impuls sichtbar, mit Fade-Out)
+            if (sim.forceTimer > 0) {
+                const alpha = Math.min(1, sim.forceTimer / 25);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                if (sim.forceType === 'brake') {
+                    drawVector(sim.xW + sim.wW/2, sim.yW - 10, -8, '#ef4444', 'F_Brems');
+                    drawVector(sim.xK + sim.wK/2, sim.yK - 10, -1.5, '#fb923c', 'F_Reib');
+                } else if (sim.forceType === 'accel') {
+                    drawVector(sim.xW + sim.wW/2, sim.yW - 10, 7, '#4ade80', 'F_Antrieb');
+                    drawVector(sim.xK + sim.wK/2, sim.yK - 10, 1.5, '#fb923c', 'F_Reib');
+                }
+                ctx.restore();
+                sim.forceTimer--;
+            }
+
+            // Telemetrie Werte
+            document.getElementById('val-vw').textContent = sim.vW.toFixed(2);
+            document.getElementById('val-vk').textContent = sim.vK.toFixed(2);
+            
+            let statusText = 'Gekoppelt';
+            if (sim.status === 'slipping') statusText = 'Rutschen';
+            if (sim.status === 'falling') statusText = 'Freier Flug';
+            document.getElementById('val-status').textContent = statusText;
+        }
+
+        function tick() {
+            updatePhysics();
+            draw();
+            requestAnimationFrame(tick);
+        }
+        tick();
+
+        // --- Simulations-Abfrage (Außerhalb des Canvas) ---
+        function showSimQuestion(type) {
+            const box = document.getElementById('sim-question-box');
+            box.classList.remove('hidden');
+            
+            // Sanft nach unten scrollen zur Frage
+            box.scrollIntoView({ behavior: 'smooth' });
+
+            let optionsHTML = '';
+            if (type === 'brake') {
+                optionsHTML = `
+                    <h4 class="text-base font-bold text-orange-400">🛑 Gleiter abrupt abgebremst! (Verständnis-Check)</h4>
+                    <p class="text-xs text-slate-300">
+                        Der Lkw stoppt schlagartig. Die Kiste rutscht mit hoher Geschwindigkeit vorwärts herunter.
+                        <strong>Wähle alle physikalisch KORREKTEN Aussagen aus (Mehrfachauswahl möglich):</strong>
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4" id="mc-options-group">
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="0" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Während des Bremsens wirkt eine starke Bremskraft auf den Gleiter, aber nicht direkt auf die Kiste.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="1" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Die Kiste bewegt sich aufgrund ihrer Massenträgheit zunächst mit ihrer bisherigen Geschwindigkeit weiter.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="2" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Eine geheimnisvolle Trägheitskraft zieht die Kiste aktiv nach vorne.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="3" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Die Reibungskraft zwischen Kiste und Gleiter ist zu schwach, um die Kiste zeitgleich mit dem Gleiter abzubremsen.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="4" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Nach dem Verlassen der Kante wird die Kiste in horizontaler Richtung durch die Schwerkraft beschleunigt.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="5" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Die Kiste stoppt sofort synchron mit dem Gleiter, da Bewegung ohne Kraft unmöglich ist.</span>
+                        </label>
+                    </div>
+                `;
+            } else {
+                optionsHTML = `
+                    <h4 class="text-base font-bold text-orange-400">🚀 Rasanter Raketen-Schub! (Verständnis-Check)</h4>
+                    <p class="text-xs text-slate-300">
+                        Der Lkw beschleunigt schlagartig nach rechts. Die Kiste rutscht relativ auf dem Deck nach hinten herunter.
+                        <strong>Wähle alle physikalisch KORREKTEN Aussagen aus (Mehrfachauswahl möglich):</strong>
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4" id="mc-options-group">
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="0" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Der Gleiter wird durch die Antriebskraft beschleunigt, während die Kiste trägheitsbedingt zunächst an ihrem Ort verharren möchte.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="1" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Eine reale, nach links gerichtete Kraft stößt die Kiste aktiv ab.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="2" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Die Haftreibungskraft zwischen Kiste und Gleiter reicht nicht aus, um die Kiste synchron mitzubeschleunigen.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="3" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Die Kiste verdoppelt im Moment des Rucks schlagartig ihre eigene Geschwindigkeit nach rechts.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="4" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Für einen Beobachter neben der Strecke bleibt die Kiste anfangs fast ortsfest, während der Gleiter unter ihr weggezogen wird.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer text-xs hover:border-orange-500/40 transition">
+                            <input type="checkbox" name="mc_opt" value="5" class="mt-0.5 h-4 w-4 text-orange-500 rounded border-slate-800 bg-slate-950 focus:ring-0">
+                            <span>Nach dem Herunterfallen wird die Kiste in horizontaler Richtung rasant abgebremst.</span>
+                        </label>
+                    </div>
+                `;
+            }
+
+            optionsHTML += `
+                <div class="flex gap-3 pt-2 border-t border-slate-800">
+                    <button onclick="closeSimQuestion()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition border border-slate-700">Abbrechen</button>
+                    <button onclick="evaluateSimQuestion('${type}')" class="flex-1 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-orange-950/20">Prüfen</button>
+                </div>
+                <div id="sim-mc-feedback" class="text-xs font-bold text-red-400 hidden mt-3 p-3 rounded-xl bg-red-500/10 border border-red-500/25"></div>
+            `;
+
+            box.innerHTML = optionsHTML;
+        }
+
+        function closeSimQuestion() {
+            const box = document.getElementById('sim-question-box');
+            box.classList.add('hidden');
+            sim.isImpulseActive = false;
+            resetSim();
+        }
+
+        function confirmSimCorrect(type) {
+            closeSimQuestion();
+            ProgressTracker.updateTask('simulation', true);
+            document.getElementById('badge-status-2').textContent = '✅ Gelöst';
+            document.getElementById('badge-status-2').className = 'text-xs text-emerald-400 font-bold';
+            document.getElementById('sec-logik').classList.remove('hidden');
+            buildLogikCheck();
+            document.getElementById('sec-logik').scrollIntoView({ behavior: 'smooth' });
+            updateProgressBar();
+        }
+
+        let simFailures = 0;
+        function evaluateSimQuestion(type) {
+            const checked = document.querySelectorAll('input[name="mc_opt"]:checked');
+            const selected = Array.from(checked).map(box => parseInt(box.value));
+            const feedback = document.getElementById('sim-mc-feedback');
+            feedback.classList.remove('hidden');
+
+            let correct = [];
+            if (type === 'brake') {
+                correct = [0, 1, 3]; // Option 1, 2, 4
+            } else {
+                correct = [0, 2, 4]; // Option 1, 3, 5
+            }
+
+            const hasAll = correct.every(v => selected.includes(v));
+            const hasNoWrong = selected.every(v => correct.includes(v));
+            const isCorrect = hasAll && hasNoWrong;
+
+            if (isCorrect) {
+                feedback.innerHTML = '✓ Hervorragend! Alle getroffenen Aussagen sind physikalisch korrekt!<br><br><button onclick="confirmSimCorrect(\'' + type + '\')" class="mt-1 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Weiter ➔</button>';
+                feedback.className = 'text-xs font-bold text-emerald-400 mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25';
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                simFailures++;
+                feedback.className = 'text-xs font-bold text-rose-400 mt-3 p-3 rounded-xl bg-red-500/10 border border-red-500/25';
+                if (selected.length === 0) {
+                    feedback.textContent = 'Wähle mindestens eine Aussage aus!';
+                } else if (simFailures >= 5) {
+                    feedback.innerHTML = 'Noch nicht ganz richtig. Tipp: ' + (type === 'brake' ? 'Die Bremskraft wirkt direkt auf den Gleiter – nicht auf die Kiste. Die Kiste hat keine direkte Bremskraft.' : 'Der Antrieb beschleunigt den Gleiter. Die Kiste bleibt zunächst zurück, weil die Reibung nicht ausreicht.') + '<br><button onclick="revealSimSolution(\'' + type + '\')" class="mt-2 px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-300 font-bold rounded-xl text-xs transition border border-red-800">⚠️ Lösung anzeigen (auf eigene Gefahr)</button>';
+                } else if (simFailures >= 3) {
+                    feedback.innerHTML = 'Noch nicht ganz richtig.<br><strong class="text-orange-400">Hilfestellung:</strong> Denke daran, auf welches Objekt die direkte Krafteinwirkung stattfindet. Und dass eine "Trägheitskraft" im Inertialsystem keine reale Kraft ist!';
+                } else {
+                    feedback.textContent = 'Noch nicht ganz. Es sind entweder falsche Aussagen ausgewählt oder es fehlen noch korrekte Haken.';
+                }
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function revealSimSolution(type) {
+            const correct = type === 'brake' ? [0, 1, 3] : [0, 2, 4];
+            document.querySelectorAll('input[name="mc_opt"]').forEach(cb => {
+                const val = parseInt(cb.value);
+                cb.checked = correct.includes(val);
+            });
+            const feedback = document.getElementById('sim-mc-feedback');
+            feedback.textContent = '✓ Lösung angezeigt. Lies die korrekt markierten Aussagen und präge dir die physikalische Erklärung ein.';
+            feedback.className = 'text-xs font-bold text-orange-400 mt-3 p-3 rounded-xl bg-orange-500/10 border border-orange-500/25';
+            feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => {
+                closeSimQuestion();
+                ProgressTracker.updateTask('simulation', true);
+                document.getElementById('badge-status-2').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-2').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('sec-logik').classList.remove('hidden');
+                buildLogikCheck();
+                document.getElementById('sec-logik').scrollIntoView({ behavior: 'smooth' });
+                updateProgressBar();
+            }, 2500);
+        }
+
+        // ==========================================
+        // ==========================================
+        // --- LOGIK-CHECK (nach Simulation) ---
+        // ==========================================
+        const LOGIK_DATA = [
+            {
+                id: 1,
+                choices: [
+                    "Die Haftreibungskraft passt sich an und bremst das Paket bei leichtem Bremsen synchron mit dem LKW ab. Erst wenn die dafür nötige Bremskraft \\(m \\cdot a\\) die Haftreibungsgrenze \\(F_{\\text{Reib, max}}\\) übersteigt, reicht die Reibung nicht mehr aus. Das Paket befindet sich horizontal im Kräftegleichgewicht und behält seine Bewegung ungestört bei.",
+                    "Bei schwachem Bremsen wirkt die geheimnisvolle Trägheitskraft noch nicht auf das Paket, weshalb kein Kräftegleichgewicht nötig ist.",
+                    "Der LKW bremst am Anfang so langsam, dass das Paket sich mechanisch an der Ladefläche verhaken kann.",
+                    "Bei leichtem Bremsen saugt die Schwerkraft das Paket nach unten, sodass es sich nicht bewegen kann.",
+                    "Das Paket rutscht eigentlich immer, wir bemerken die kleine Verschiebung bei schwacher Verzögerung nur nicht."
+                ],
+                correctIdx: 0
+            },
+            {
+                id: 2,
+                choices: [
+                    "Das Paket behält seine Vorwärtsgeschwindigkeit unverändert bei und fliegt gleichförmig weiter, weil in horizontaler Richtung keine ausreichende bremsende Kraft auf es wirkt. Der LKW unter ihm wird dagegen stark abgebremst.",
+                    "Das Paket erfährt eine plötzliche Trägheitskraft, die es im Raum aktiv nach vorne beschleunigt.",
+                    "Das Paket stoppt augenblicklich synchron mit den Reifen des LKWs, um das Kräftegleichgewicht aufrechtzuerhalten.",
+                    "Das Paket wird sofort nach hinten geschoben, weil die Ladefläche unter ihm wegbeschleunigt.",
+                    "Es erfährt eine Hebekraft nach oben durch die in kinetische Energie umgewandelte Reibung."
+                ],
+                correctIdx: 0
+            },
+            {
+                id: 3,
+                choices: [
+                    "Das Paket befindet sich in horizontaler Richtung nahezu im Kräftegleichgewicht (\\(\\Sigma F = 0\\)), da die Haftreibung zu schwach ist. Nach dem Trägheitssatz ändert es daher seinen gleichförmigen Bewegungszustand nicht.",
+                    "Trägheit ist eine aktive Gegenkraft, die das Kräftegleichgewicht der Schwerkraft stört und das Paket nach vorne zieht.",
+                    "Die blockierten Reifen übertragen eine kinetische Impulswelle auf das Paket, die es nach vorne katapultiert.",
+                    "Die Luftwirbel am Heck des LKWs ziehen das Paket mit einem aerodynamischen Sog nach vorne.",
+                    "Das Paket wandelt seine potentielle Energie augenblicklich in kinetische Vorwärtsenergie um."
+                ],
+                correctIdx: 0
+            }
+        ];
+
+        const lqSolved = { 1: false, 2: false, 3: false };
+        const lqFailures = { 1: 0, 2: 0, 3: 0 };
+        const lqShuffled = {};
+
+        function buildLogikCheck() {
+            LOGIK_DATA.forEach(q => {
+                const container = document.getElementById('lq' + q.id + '-choices');
+                if (!container || container.children.length > 0) return;
+
+                const idxs = q.choices.map((_, i) => i);
+                for (let i = idxs.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+                }
+                lqShuffled[q.id] = idxs;
+
+                idxs.forEach(origIdx => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-start gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800 cursor-pointer transition text-xs text-slate-300 hover:bg-slate-800/60';
+                    label.innerHTML = `<input type="radio" name="lq${q.id}" value="${origIdx}" class="mt-0.5 shrink-0 accent-blue-500"><span>${q.choices[origIdx]}</span>`;
+                    container.appendChild(label);
+                });
+            });
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById('lq-container')]);
+        }
+
+        function checkLogikQ(qNum) {
+            const q = LOGIK_DATA.find(item => item.id === qNum);
+            const selected = document.querySelector(`input[name="lq${qNum}"]:checked`);
+            const fb = document.getElementById('lq' + qNum + '-feedback');
+            const status = document.getElementById('lq' + qNum + '-status');
+
+            if (!selected) {
+                fb.textContent = 'Bitte wähle zuerst eine Antwort aus!';
+                fb.className = 'text-xs font-bold text-rose-400';
+                return;
+            }
+
+            const isCorrect = parseInt(selected.value) === q.correctIdx;
+
+            document.querySelectorAll(`input[name="lq${qNum}"]`).forEach(input => {
+                input.parentNode.className = 'flex items-start gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800 cursor-pointer transition text-xs text-slate-300';
+            });
+
+            if (isCorrect) {
+                selected.parentNode.className = 'flex items-start gap-3 p-3 bg-emerald-900/30 rounded-xl border-2 border-emerald-500 cursor-pointer text-xs text-emerald-200';
+                status.textContent = '✅ Gelöst';
+                status.className = 'text-xs font-bold text-emerald-400';
+                fb.textContent = '🎉 Absolut richtig!';
+                fb.className = 'text-xs font-bold text-emerald-400';
+                lqSolved[qNum] = true;
+                checkLogikGlobal();
+            } else {
+                lqFailures[qNum]++;
+                selected.parentNode.className = 'flex items-start gap-3 p-3 bg-rose-900/30 rounded-xl border-2 border-rose-500 cursor-pointer text-xs text-rose-200';
+                status.textContent = '❌ Falsch';
+                status.className = 'text-xs font-bold text-rose-400';
+                lqSolved[qNum] = false;
+                if (lqFailures[qNum] >= 5 && !document.getElementById('lq-reveal-' + qNum)) {
+                    fb.innerHTML = '💡 Leider falsch. Du hast diese Frage mehrmals versucht.';
+                    fb.className = 'text-xs font-bold text-rose-400';
+                    const revBtn = document.createElement('button');
+                    revBtn.id = 'lq-reveal-' + qNum;
+                    revBtn.className = 'mt-2 px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-300 font-bold rounded-xl text-xs transition border border-red-800 block';
+                    revBtn.textContent = '⚠️ Lösung anzeigen (auf eigene Gefahr)';
+                    revBtn.onclick = () => revealLogikQ(qNum);
+                    document.getElementById('lq' + qNum + '-block').appendChild(revBtn);
+                } else {
+                    fb.textContent = '💡 Leider falsch. Lies den Physikalischen Clou oben nochmal durch!';
+                    fb.className = 'text-xs font-bold text-rose-400';
+                }
+            }
+        }
+
+        function revealLogikQ(qNum) {
+            const q = LOGIK_DATA.find(item => item.id === qNum);
+            document.querySelectorAll(`input[name="lq${qNum}"]`).forEach(input => {
+                const isCorrect = parseInt(input.value) === q.correctIdx;
+                input.parentNode.className = isCorrect
+                    ? 'flex items-start gap-3 p-3 bg-emerald-900/30 rounded-xl border-2 border-emerald-500 cursor-pointer text-xs text-emerald-200'
+                    : 'flex items-start gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800 cursor-pointer transition text-xs text-slate-400 opacity-50';
+                if (isCorrect) input.checked = true;
+            });
+            const fb = document.getElementById('lq' + qNum + '-feedback');
+            fb.textContent = '✓ Lösung angezeigt. Lies die Erklärung sorgfältig und merke sie dir!';
+            fb.className = 'text-xs font-bold text-orange-400';
+            const revBtn = document.getElementById('lq-reveal-' + qNum);
+            if (revBtn) revBtn.remove();
+            document.getElementById('lq' + qNum + '-status').textContent = '✅ Gelöst';
+            document.getElementById('lq' + qNum + '-status').className = 'text-xs font-bold text-emerald-400';
+            lqSolved[qNum] = true;
+            checkLogikGlobal();
+        }
+
+        function checkLogikGlobal() {
+            if (lqSolved[1] && lqSolved[2] && lqSolved[3]) {
+                document.getElementById('lq-badge').textContent = '✅ Gelöst';
+                document.getElementById('lq-badge').className = 'text-xs font-bold text-emerald-400';
+                document.getElementById('lq-global-feedback').classList.remove('hidden');
+                document.getElementById('sec-3').classList.remove('hidden');
+                document.getElementById('badge-status-3').textContent = '🔴 Offen';
+                document.getElementById('badge-status-3').className = 'text-xs text-slate-400';
+                document.getElementById('sec-3').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // --- DENKAUFGABE (TRANSFER, MULTIPLE RESPONSE) ---
+        // ==========================================
+        const DENKAUFGABEN = {
+            a: {
+                options: [
+                    { text: 'Die Ketchup-Flasche wird abrupt gestoppt, der Ketchup im Inneren behält aufgrund seiner Trägheit die Abwärtsbewegung bei.', correct: true },
+                    { text: 'Auf den Ketchup wirkt durch das abrupte Stoppen keine ausreichend große Kraft, um ihn ebenso schnell zu stoppen wie die Flasche.', correct: true },
+                    { text: 'Je größer die Masse des Ketchups, desto stärker ist seine Trägheit – das verstärkt den Effekt.', correct: true },
+                    { text: 'Eine unsichtbare „Schwungkraft“ schiebt den Ketchup aus der Flasche heraus.', correct: false },
+                    { text: 'Der Ketchup wird durch den Luftdruck in der Flasche herausgepresst, Trägheit spielt dabei keine Rolle.', correct: false },
+                    { text: 'Die Bewegung stoppt für Flasche und Ketchup exakt gleichzeitig, da beide fest miteinander verbunden sind.', correct: false }
+                ],
+                hint: 'Überlege: Was passiert mit der Flasche und was mit dem Ketchup im Moment des Stopps? Bewegen sich beide exakt gleich?'
+            },
+            b: {
+                options: [
+                    { text: 'Dein Fuß wird durch die Gehwegplatte abrupt gestoppt, der restliche Körper bewegt sich aufgrund der Trägheit mit der ursprünglichen Geschwindigkeit weiter.', correct: true },
+                    { text: 'Es fehlt eine ausreichend große Kraft, die den oberen Körper im selben Moment wie den Fuß abbremst.', correct: true },
+                    { text: 'Je schneller du läufst, desto größer ist deine Geschwindigkeit – und damit auch die Tendenz, nach vorne zu fallen.', correct: true },
+                    { text: 'Eine Trägheitskraft schiebt deinen Oberkörper aktiv nach vorne.', correct: false },
+                    { text: 'Der Sturz entsteht nur durch den Schreck, nicht durch Physik.', correct: false },
+                    { text: 'Fuß und Oberkörper werden durch das Hängenbleiben gleich stark abgebremst, deshalb fällst du.', correct: false }
+                ],
+                hint: 'Vergleiche die Bewegung deines Fußes mit der Bewegung deines restlichen Körpers in dem Moment, in dem der Fuß hängen bleibt.'
+            },
+            c: {
+                options: [
+                    { text: 'Im Weltraum wirken (fast) keine Reibungskräfte, die die Sonde abbremsen könnten.', correct: true },
+                    { text: 'Ohne eine bremsende Kraft behält die Sonde ihre Geschwindigkeit aufgrund ihrer Trägheit unverändert bei.', correct: true },
+                    { text: 'Der Trägheitssatz gilt auch für sehr große Massen wie Raumsonden.', correct: true },
+                    { text: 'Die Sonde wird ständig von einem unsichtbaren Antrieb weiter beschleunigt.', correct: false },
+                    { text: 'Im Weltraum gilt der Trägheitssatz nicht, da es keine Schwerkraft gibt.', correct: false },
+                    { text: 'Die Sonde bewegt sich nur deshalb weiter, weil die Erde sie noch immer anzieht.', correct: false }
+                ],
+                hint: 'Was müsste auf die Sonde wirken, damit sie langsamer werden würde? Ist davon im Weltraum etwas vorhanden?'
+            }
+        };
+
+        const daAttempts = { a: 0, b: 0, c: 0 };
+        const daShuffledOptions = {};
+
+        function shuffleArray(arr) {
+            const copy = arr.slice();
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function buildDenkaufgabe() {
+            ['a', 'b', 'c'].forEach(key => {
+                const container = document.getElementById('da-choices-' + key);
+                if (!container) return;
+
+                const indexed = DENKAUFGABEN[key].options.map((opt, i) => ({ ...opt, idx: i }));
+                const shuffled = shuffleArray(indexed);
+                daShuffledOptions[key] = shuffled;
+
+                container.innerHTML = shuffled.map((opt, i) => `
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors text-xs text-slate-300">
+                        <input type="checkbox" data-da-key="${key}" data-da-idx="${opt.idx}" class="mt-0.5 accent-orange-500">
+                        <span>${opt.text}</span>
+                    </label>
+                `).join('');
+            });
+        }
+
+        function checkDenkaufgabe(key) {
+            const container = document.getElementById('da-choices-' + key);
+            const feedback = document.getElementById('da-feedback-' + key);
+            const status = document.getElementById('da-status-' + key);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const selectedIdx = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.dataset.daIdx, 10));
+
+            if (selectedIdx.length === 0) {
+                feedback.textContent = 'Wähle mindestens eine Aussage aus!';
+                feedback.className = 'text-xs font-bold text-rose-400';
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            }
+
+            const correctIdx = DENKAUFGABEN[key].options
+                .map((opt, i) => opt.correct ? i : null)
+                .filter(i => i !== null);
+
+            const isCorrect = correctIdx.length === selectedIdx.length &&
+                correctIdx.every(i => selectedIdx.includes(i));
+
+            if (isCorrect) {
+                feedback.textContent = '✓ Richtig! Du hast alle korrekten Aussagen erkannt.';
+                feedback.className = 'text-xs font-bold text-emerald-400';
+                status.textContent = 'Gelöst ✅';
+                status.className = 'ml-2 text-xs font-bold text-emerald-400';
+                checkboxes.forEach(cb => cb.disabled = true);
+                document.getElementById('da-block-' + key).querySelector('button').disabled = true;
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                checkDenkaufgabeGlobal();
+            } else {
+                daAttempts[key]++;
+                feedback.className = 'text-xs font-bold text-rose-400';
+                if (daAttempts[key] >= 5 && !document.getElementById('da-reveal-btn-' + key)) {
+                    feedback.textContent = 'Noch nicht ganz. Hilfestellung: ' + DENKAUFGABEN[key].hint;
+                    const revBtn = document.createElement('button');
+                    revBtn.id = 'da-reveal-btn-' + key;
+                    revBtn.className = 'mt-2 px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-300 font-bold rounded-xl text-xs transition border border-red-800 block';
+                    revBtn.textContent = '⚠️ Lösung anzeigen (auf eigene Gefahr)';
+                    revBtn.onclick = () => revealDenkaufgabe(key);
+                    document.getElementById('da-block-' + key).appendChild(revBtn);
+                } else if (daAttempts[key] >= 3) {
+                    feedback.textContent = 'Noch nicht ganz. Hilfestellung: ' + DENKAUFGABEN[key].hint;
+                } else {
+                    feedback.textContent = 'Noch nicht ganz. Es sind entweder falsche Aussagen ausgewählt oder es fehlen noch korrekte Haken.';
+                }
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function revealDenkaufgabe(key) {
+            const correctIdx = DENKAUFGABEN[key].options
+                .map((opt, i) => opt.correct ? i : null)
+                .filter(i => i !== null);
+            const container = document.getElementById('da-choices-' + key);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                const idx = parseInt(cb.dataset.daIdx, 10);
+                const isCorr = correctIdx.includes(idx);
+                cb.checked = isCorr;
+                const label = cb.closest('label');
+                if (isCorr) {
+                    label.className = 'flex items-start gap-2.5 p-2.5 rounded-xl bg-emerald-900/20 border border-emerald-500 cursor-pointer text-xs text-emerald-200';
+                } else {
+                    label.className = 'flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/50 border border-slate-800 cursor-pointer text-xs text-slate-400 opacity-50';
+                }
+                cb.disabled = true;
+            });
+            const feedback = document.getElementById('da-feedback-' + key);
+            feedback.textContent = '✓ Lösung angezeigt. Lies die grün markierten Aussagen und verstehe, warum sie korrekt sind.';
+            feedback.className = 'text-xs font-bold text-orange-400';
+            document.getElementById('da-status-' + key).textContent = 'Gelöst ✅';
+            document.getElementById('da-status-' + key).className = 'ml-2 text-xs font-bold text-emerald-400';
+            document.getElementById('da-block-' + key).querySelector('button:not([id^="da-reveal"])').disabled = true;
+            const revBtn = document.getElementById('da-reveal-btn-' + key);
+            if (revBtn) revBtn.remove();
+            checkDenkaufgabeGlobal();
+        }
+
+        function checkDenkaufgabeGlobal() {
+            const allSolved = ['a', 'b', 'c'].every(key => {
+                const status = document.getElementById('da-status-' + key);
+                return status && status.textContent.includes('Gelöst');
+            });
+
+            if (allSolved && !ProgressTracker.isSolved('kitutor')) {
+                document.getElementById('da-global-solved').classList.remove('hidden');
+                ProgressTracker.updateTask('kitutor', true);
+                document.getElementById('badge-status-4').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-4').className = 'text-xs text-emerald-400 font-bold';
+                document.getElementById('sec4-lueckentext').classList.remove('hidden');
+                buildSec4Lt();
+                document.getElementById('sec-4-next-btn-box').classList.remove('hidden');
+                updateProgressBar();
+            }
+        }
+
+        // ==========================================
+        // --- LÜCKENTEXT SEKTION 4 ---
+        // ==========================================
+        const SEC4_LT_WORDS = ["?", "Fahrzeug", "Paket", "Reibungskraft", "Gewichtskraft",
+            "Trägheitskraft", "Wechselwirkungsprinzip", "Kräftegleichgewicht", "vorne", "hinten",
+            "Trägheitssatz", "gleichförmigen", "beschleunigten", "Luftwiderstand"];
+
+        const SEC4_LT_CORRECT = {
+            "s4lt-g1": "Fahrzeug",
+            "s4lt-g2": "Reibungskraft",
+            "s4lt-g3": "Kräftegleichgewicht",
+            "s4lt-g4": "vorne",
+            "s4lt-g5": "Trägheitssatz",
+            "s4lt-g6": "gleichförmigen"
+        };
+
+        function buildSec4Lt() {
+            Object.keys(SEC4_LT_CORRECT).forEach(key => {
+                const sel = document.getElementById(key);
+                if (!sel || sel.options.length > 1) return;
+                sel.innerHTML = '';
+                SEC4_LT_WORDS.forEach(word => {
+                    const opt = document.createElement('option');
+                    opt.value = word === "?" ? "" : word;
+                    opt.textContent = word;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        function checkSec4Lt() {
+            let allCorrect = true;
+            const baseClass = 'mx-1 px-2 py-1 rounded-lg font-bold text-sm focus:outline-none';
+            Object.entries(SEC4_LT_CORRECT).forEach(([key, correct]) => {
+                const el = document.getElementById(key);
+                if (!el) return;
+                if (el.value === correct) {
+                    el.className = baseClass + ' bg-emerald-950 border-2 border-emerald-500 text-emerald-300';
+                } else {
+                    el.className = baseClass + ' bg-rose-950 border-2 border-rose-500 text-rose-300';
+                    allCorrect = false;
+                }
+            });
+            const feedback = document.getElementById('s4lt-feedback');
+            const status = document.getElementById('s4lt-status');
+            if (allCorrect) {
+                feedback.textContent = '✓ Alle Lücken korrekt ausgefüllt! Sehr gut erklärt!';
+                feedback.className = 'text-xs font-bold text-emerald-400';
+                status.textContent = 'Gelöst ✅';
+                status.className = 'text-xs font-bold text-emerald-400';
+                Object.keys(SEC4_LT_CORRECT).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.disabled = true;
+                });
+            } else {
+                feedback.textContent = '✗ Einige Antworten stimmen noch nicht. Versuche es nochmal!';
+                feedback.className = 'text-xs font-bold text-rose-400';
+            }
+        }
+
+        // ==========================================
+        // --- RECHENAUFGABEN (SIGNIFIKANTE STELLEN) ---
+        // ==========================================
+        function checkCalcA() {
+            const input = document.getElementById('input-calc-a').value.trim();
+            const feedback = document.getElementById('feedback-calc-a');
+            feedback.classList.remove('hidden');
+
+            // 90 km/h = 25 m/s. 90 hat 2 gültige Stellen (oder 1, aber hier 2).
+            if (input === '25' || input === '25,0') {
+                feedback.textContent = '✓ Korrekt! 90 km/h = (90 / 3,6) m/s = 25 m/s. Auf 2 gültige Stellen gerundet.';
+                feedback.className = 'text-[11px] text-emerald-400 font-bold mt-1';
+                document.getElementById('input-calc-a').disabled = true;
+                
+                ProgressTracker.updateTask('calca', true);
+                document.getElementById('box-calc-b').classList.remove('hidden');
+                updateProgressBar();
+            } else if (input === '25.0' || input === '25,00') {
+                feedback.textContent = 'Fast richtig. Achte auf die exakte Anzahl der gültigen Stellen der Angabe (90 km/h hat 2 signifikante Stellen).';
+                feedback.className = 'text-[11px] text-yellow-400 font-bold mt-1';
+            } else {
+                feedback.textContent = 'Falsch. Nutze den Umrechnungsfaktor 3,6!';
+                feedback.className = 'text-[11px] text-rose-400 font-bold mt-1';
+            }
+        }
+
+        function checkCalcB() {
+            const input = document.getElementById('input-calc-b').value.trim();
+            const feedback = document.getElementById('feedback-calc-b');
+            feedback.classList.remove('hidden');
+
+            // a = 25 m/s / 2,5 s = 10 m/s². 2,5 has 2 sign. figures. 25 has 2 sign. figures. 
+            // 10 must be written. But wait, "10" has 1 or 2 sig figs? "10" is 2 sig figs if written as 10. Or "10," or "1,0 * 10^1". 
+            // Standard school math accepts "10" or "10,0" (which is actually 3, but accepted). Let's check for "10".
+            if (input === '10' || input === '10,0') {
+                feedback.textContent = '✓ Korrekt! 25 m/s / 2,5 s = 10 m/s² (bzw. auf 2 gültige Stellen gerundet).';
+                feedback.className = 'text-[11px] text-emerald-400 font-bold mt-1';
+                document.getElementById('input-calc-b').disabled = true;
+                
+                ProgressTracker.updateTask('calcb', true);
+                document.getElementById('sec-5-next-btn-box').classList.remove('hidden');
+                document.getElementById('badge-status-5').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-5').className = 'text-xs text-emerald-400 font-bold';
+                updateProgressBar();
+            } else {
+                feedback.textContent = 'Falsches Ergebnis. Berechne: 25 m/s geteilt durch 2,5 s und achte auf die Rundung!';
+                feedback.className = 'text-[11px] text-rose-400 font-bold mt-1';
+            }
+        }
+
+        // ==========================================
+        // --- SEKTION 7: WEITERE ÜBUNGSAUFGABEN ---
+        // ==========================================
+
+        // --- Aufgabe C.1: Einheitsumrechnung (Zug) ---
+        function checkCalcD1() {
+            const input = document.getElementById('input-calc-d1').value.trim().replace(',', '.');
+            const feedback = document.getElementById('feedback-calc-d1');
+            feedback.classList.remove('hidden');
+            // 54 km/h ÷ 3,6 = 15 m/s (2 sig figs)
+            if (input === '15' || input === '15.0') {
+                feedback.textContent = '✓ Korrekt! 54 km/h ÷ 3,6 = 15 m/s (2 gültige Stellen)';
+                feedback.className = 'text-[11px] text-emerald-400 font-bold';
+                document.getElementById('input-calc-d1').disabled = true;
+                document.getElementById('box-calc-d2').classList.remove('hidden');
+            } else {
+                feedback.textContent = 'Noch nicht korrekt. Teile den Zahlenwert in km/h durch 3,6.';
+                feedback.className = 'text-[11px] text-rose-400 font-bold';
+            }
+        }
+
+        // --- Aufgabe C.2: Bremsverzögerung ---
+        function checkCalcD2() {
+            const raw = document.getElementById('input-calc-d2').value.trim().replace(',', '.');
+            const feedback = document.getElementById('feedback-calc-d2');
+            feedback.classList.remove('hidden');
+            // a = 15 / 12 = 1,25 ≈ 1,3 m/s² (2 gültige Stellen)
+            const val = parseFloat(raw);
+            if (raw === '1.3' || raw === '1.25' || (val >= 1.24 && val <= 1.26)) {
+                feedback.textContent = '✓ Korrekt! a = 15 m/s ÷ 12 s = 1,3 m/s² (2 gültige Stellen)';
+                feedback.className = 'text-[11px] text-emerald-400 font-bold';
+                document.getElementById('input-calc-d2').disabled = true;
+                ProgressTracker.updateTask('calcd', true);
+                document.getElementById('box-zuordnung').classList.remove('hidden');
+                updateProgressBar();
+            } else {
+                feedback.textContent = 'Noch nicht korrekt. Teile Δv (= 15 m/s – 0) durch Δt (= 12 s) und runde auf 2 gültige Stellen.';
+                feedback.className = 'text-[11px] text-rose-400 font-bold';
+            }
+        }
+
+        // --- Zuordnungsaufgabe ---
+        const ZUORDNUNG_DATA = [
+            { icon: '🚌', text: 'Beim Bremsen des Busses rutschst du auf dem Sitz nach vorne.', correct: 'traegheit' },
+            { icon: '🍎', text: 'Ein Apfel fällt vom Baum, weil er sich vom Ast löst.', correct: 'andere' },
+            { icon: '🛸', text: 'Eine Raumsonde fliegt ohne Antrieb mit konstanter Geschwindigkeit durchs All.', correct: 'traegheit' },
+            { icon: '🧲', text: 'Eine Büroklammer wird von einem Magneten angezogen.', correct: 'andere' },
+            { icon: '🛹', text: 'Beim Skateboard: Dein Fuß bleibt an einem Stein hängen – du fliegst nach vorne.', correct: 'traegheit' },
+            { icon: '🎩', text: 'Zieht man blitzschnell das Tischtuch weg, bleiben die Gläser auf dem Tisch stehen.', correct: 'traegheit' }
+        ];
+        let zuordnungAttempts = 0;
+
+        function buildZuordnung() {
+            const container = document.getElementById('zuordnung-items');
+            if (!container || container.children.length > 0) return;
+            ZUORDNUNG_DATA.forEach((item, i) => {
+                container.innerHTML += `
+                    <div class="flex items-start gap-3 p-3 bg-slate-950/50 border border-slate-800 rounded-xl" id="z-row-${i}">
+                        <span class="text-xl shrink-0 mt-0.5">${item.icon}</span>
+                        <span class="text-xs text-slate-300 flex-1 leading-relaxed">${item.text}</span>
+                        <div class="flex gap-1.5 shrink-0">
+                            <button onclick="selectZuordnung(${i},'traegheit')" id="z-btn-${i}-traegheit"
+                                class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-slate-700 bg-slate-800 text-slate-300 hover:border-orange-500 hover:text-orange-400 transition z-btn" data-idx="${i}" data-val="traegheit">
+                                Trägheit
+                            </button>
+                            <button onclick="selectZuordnung(${i},'andere')" id="z-btn-${i}-andere"
+                                class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500 hover:text-slate-200 transition z-btn" data-idx="${i}" data-val="andere">
+                                Andere Ursache
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        const zuordnungSelections = {};
+        function selectZuordnung(idx, val) {
+            zuordnungSelections[idx] = val;
+            const rowBtns = document.querySelectorAll(`[data-idx="${idx}"].z-btn`);
+            rowBtns.forEach(btn => {
+                const isSelected = btn.dataset.val === val;
+                btn.className = btn.className.replace(/bg-\S+|text-\S+|border-\S+/g, '').trim();
+                if (isSelected) {
+                    btn.className += ' px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-orange-500 bg-orange-600/20 text-orange-400 transition z-btn';
+                } else {
+                    btn.className += ' px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500 transition z-btn';
+                }
+            });
+        }
+
+        function checkZuordnung() {
+            const feedback = document.getElementById('feedback-zuordnung');
+            if (Object.keys(zuordnungSelections).length < ZUORDNUNG_DATA.length) {
+                feedback.textContent = 'Ordne zunächst alle Phänomene zu, bevor du prüfst.';
+                feedback.className = 'text-xs font-medium text-rose-400';
+                return;
+            }
+            const allCorrect = ZUORDNUNG_DATA.every((item, i) => zuordnungSelections[i] === item.correct);
+            if (allCorrect) {
+                feedback.textContent = '✓ Alle Phänomene korrekt zugeordnet!';
+                feedback.className = 'text-xs font-bold text-emerald-400';
+                document.getElementById('box-zuordnung').querySelectorAll('button').forEach(btn => btn.disabled = true);
+                ProgressTracker.updateTask('zuordnung', true);
+                document.getElementById('box-mcset').classList.remove('hidden');
+                updateProgressBar();
+            } else {
+                zuordnungAttempts++;
+                if (zuordnungAttempts >= 5 && !document.getElementById('zuordnung-reveal-btn')) {
+                    feedback.textContent = 'Noch nicht alle korrekt. Tipp: Überprüfe besonders Apfel und Büroklammer – welche Kraft ist dort direkt verantwortlich?';
+                    feedback.className = 'text-xs font-bold text-rose-400';
+                    const revBtn = document.createElement('button');
+                    revBtn.id = 'zuordnung-reveal-btn';
+                    revBtn.className = 'mt-2 px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-300 font-bold rounded-xl text-xs transition border border-red-800 block';
+                    revBtn.textContent = '⚠️ Lösung anzeigen (auf eigene Gefahr)';
+                    revBtn.onclick = revealZuordnung;
+                    document.getElementById('box-zuordnung').appendChild(revBtn);
+                } else if (zuordnungAttempts >= 3) {
+                    feedback.textContent = 'Noch nicht alle korrekt. Tipp: Überprüfe besonders Apfel und Büroklammer – welche Kraft ist dort direkt verantwortlich?';
+                    feedback.className = 'text-xs font-bold text-rose-400';
+                } else {
+                    feedback.textContent = 'Noch nicht ganz. Mindestens eine Zuordnung ist falsch – überdenke alle Phänomene sorgfältig.';
+                    feedback.className = 'text-xs font-bold text-rose-400';
+                }
+            }
+        }
+
+        function revealZuordnung() {
+            ZUORDNUNG_DATA.forEach((item, i) => {
+                selectZuordnung(i, item.correct);
+            });
+            document.getElementById('box-zuordnung').querySelectorAll('button').forEach(btn => btn.disabled = true);
+            const feedback = document.getElementById('feedback-zuordnung');
+            feedback.textContent = '✓ Lösung angezeigt. Schaue dir die Zuordnungen an und merke dir die Erklärungen.';
+            feedback.className = 'text-xs font-bold text-orange-400';
+            const revBtn = document.getElementById('zuordnung-reveal-btn');
+            if (revBtn) revBtn.remove();
+            ProgressTracker.updateTask('zuordnung', true);
+            document.getElementById('box-mcset').classList.remove('hidden');
+            updateProgressBar();
+        }
+
+        // --- MC-Set (3 × Multiple Response) ---
+        const MCSET_DATA = [
+            {
+                options: [
+                    { text: 'Ein Körper verharrt in Ruhe oder gleichförmig geradliniger Bewegung, solange keine resultierende Kraft wirkt.', correct: true },
+                    { text: 'Der Trägheitssatz gilt für alle Körper unabhängig von ihrer Masse.', correct: true },
+                    { text: 'Trägheit ist eine Kraft, die Körper im Ruhezustand hält.', correct: false },
+                    { text: 'Konstante Geschwindigkeit bedeutet: Die Nettokraft auf den Körper ist gleich null.', correct: true },
+                    { text: 'Der Trägheitssatz gilt nur für Körper im Vakuum.', correct: false },
+                    { text: 'Ein ruhender Körper bleibt nur dann in Ruhe, wenn er besonders schwer ist.', correct: false }
+                ],
+                hint: 'Überlege: Ist Trägheit eine Kraft – oder eine Eigenschaft von Materie?'
+            },
+            {
+                options: [
+                    { text: 'Um einen ruhenden Körper zu bewegen, muss eine resultierende Kraft auf ihn wirken.', correct: true },
+                    { text: 'Schwerere Körper fallen im Vakuum schneller als leichtere.', correct: false },
+                    { text: 'Ein im All treibendes Raumschiff ohne Triebwerk bewegt sich ewig mit konstanter Geschwindigkeit geradeaus.', correct: true },
+                    { text: 'Eine Kraft kann einen Körper nur verlangsamen, nicht beschleunigen.', correct: false },
+                    { text: 'Ohne Reibung würde ein rollender Ball ewig geradeaus weiterrollen.', correct: true },
+                    { text: 'Jeder Körper im Universum hat die natürliche Tendenz, sich zu verlangsamen.', correct: false }
+                ],
+                hint: 'Denke an Galileos Fallversuch und an das Weltraum-Beispiel: Was braucht es, um die Bewegung zu ändern?'
+            },
+            {
+                options: [
+                    { text: 'Ein Planet zieht einen Mond durch Gravitation auf einer Kreisbahn – der Mond würde ohne sie geradeaus fliegen.', correct: true },
+                    { text: 'Ein ungesichertes Paket auf dem Lkw bleibt beim Bremsen kurz in Bewegung – es „fliegt" nach vorne.', correct: true },
+                    { text: 'Ein Fallschirmspringer beschleunigt durch die Schwerkraft Richtung Erde.', correct: false },
+                    { text: 'Auf einer reibungsfreien Eisfläche gleitet ein Stein ewig mit gleicher Geschwindigkeit.', correct: true },
+                    { text: 'Ein Elektromotor beschleunigt ein Fahrzeug durch seine Antriebskraft.', correct: false },
+                    { text: 'Nach dem Abwurf eines Balls bewegt er sich horizontal mit konstanter Geschwindigkeit weiter, bis Reibung und Schwerkraft wirken.', correct: true }
+                ],
+                hint: 'Der Trägheitssatz beschreibt das Verhalten OHNE resultierende Kraft – achte darauf, welche Beispiele das zeigen.'
+            }
+        ];
+        const mcsetAttempts = { 1: 0, 2: 0, 3: 0 };
+        const mcsetSolved = { 1: false, 2: false, 3: false };
+        const mcsetShuffled = {};
+
+        function buildMCSet() {
+            [1, 2, 3].forEach(n => {
+                const container = document.getElementById('mcset-choices-' + n);
+                if (!container || container.children.length > 0) return;
+                const data = MCSET_DATA[n - 1];
+                const indexed = data.options.map((opt, i) => ({ ...opt, idx: i }));
+                const shuffled = shuffleArray(indexed);
+                mcsetShuffled[n] = shuffled;
+                container.innerHTML = shuffled.map(opt => `
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors text-xs text-slate-300">
+                        <input type="checkbox" data-mcset-q="${n}" data-mcset-idx="${opt.idx}" class="mt-0.5 accent-orange-500">
+                        <span>${opt.text}</span>
+                    </label>`).join('');
+            });
+        }
+
+        function checkMCSetQ(n) {
+            const container = document.getElementById('mcset-choices-' + n);
+            const feedback = document.getElementById('mcset-feedback-' + n);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const selectedIdx = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.dataset.mcsetIdx, 10));
+            if (selectedIdx.length === 0) {
+                feedback.textContent = 'Wähle mindestens eine Aussage aus!';
+                feedback.className = 'text-xs font-bold text-rose-400';
+                return;
+            }
+            const data = MCSET_DATA[n - 1];
+            const correctIdx = data.options.map((opt, i) => opt.correct ? i : null).filter(i => i !== null);
+            const isCorrect = correctIdx.length === selectedIdx.length && correctIdx.every(i => selectedIdx.includes(i));
+            if (isCorrect) {
+                feedback.textContent = '✓ Alle korrekten Aussagen gefunden!';
+                feedback.className = 'text-xs font-bold text-emerald-400';
+                checkboxes.forEach(cb => cb.disabled = true);
+                document.getElementById('mcset-block-' + n).querySelector('button').disabled = true;
+                mcsetSolved[n] = true;
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                checkMCSetGlobal();
+            } else {
+                mcsetAttempts[n]++;
+                feedback.className = 'text-xs font-bold text-rose-400';
+                if (mcsetAttempts[n] >= 5 && !document.getElementById('mcset-reveal-btn-' + n)) {
+                    feedback.textContent = 'Noch nicht ganz. Tipp: ' + data.hint;
+                    const revBtn = document.createElement('button');
+                    revBtn.id = 'mcset-reveal-btn-' + n;
+                    revBtn.className = 'mt-2 px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-300 font-bold rounded-xl text-xs transition border border-red-800 block';
+                    revBtn.textContent = '⚠️ Lösung anzeigen (auf eigene Gefahr)';
+                    revBtn.onclick = () => revealMCSet(n);
+                    document.getElementById('mcset-block-' + n).appendChild(revBtn);
+                } else if (mcsetAttempts[n] >= 3) {
+                    feedback.textContent = 'Noch nicht ganz. Tipp: ' + data.hint;
+                } else {
+                    feedback.textContent = 'Noch nicht ganz. Es sind entweder falsche Aussagen ausgewählt oder es fehlen korrekte Haken.';
+                }
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function revealMCSet(n) {
+            const data = MCSET_DATA[n - 1];
+            const correctIdx = data.options.map((opt, i) => opt.correct ? i : null).filter(i => i !== null);
+            const container = document.getElementById('mcset-choices-' + n);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                const idx = parseInt(cb.dataset.mcsetIdx, 10);
+                const isCorr = correctIdx.includes(idx);
+                cb.checked = isCorr;
+                const label = cb.closest('label');
+                if (isCorr) {
+                    label.className = 'flex items-start gap-2.5 p-2.5 rounded-xl bg-emerald-900/20 border border-emerald-500 cursor-pointer text-xs text-emerald-200';
+                } else {
+                    label.className = 'flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/50 border border-slate-800 cursor-pointer text-xs text-slate-400 opacity-50';
+                }
+                cb.disabled = true;
+            });
+            const feedback = document.getElementById('mcset-feedback-' + n);
+            feedback.textContent = '✓ Lösung angezeigt. Lerne die grün markierten Aussagen.';
+            feedback.className = 'text-xs font-bold text-orange-400';
+            document.getElementById('mcset-block-' + n).querySelector('button:not([id^="mcset-reveal"])').disabled = true;
+            const revBtn = document.getElementById('mcset-reveal-btn-' + n);
+            if (revBtn) revBtn.remove();
+            mcsetSolved[n] = true;
+            checkMCSetGlobal();
+        }
+
+        function checkMCSetGlobal() {
+            if ([1, 2, 3].every(n => mcsetSolved[n]) && !ProgressTracker.isSolved('mcset')) {
+                ProgressTracker.updateTask('mcset', true);
+                document.getElementById('sec7-global-solved').classList.remove('hidden');
+                document.getElementById('sec-7-finish').classList.remove('hidden');
+                document.getElementById('badge-status-7').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-7').className = 'text-xs text-emerald-400 font-bold';
+                updateProgressBar();
+            }
+        }
+
+        // ==========================================
+        // --- LÜCKENTEXT (HEFTEINTRAG) ---
+        // ==========================================
+        const wordChips = document.querySelectorAll('.word-chip');
+        const underlineBlanks = document.querySelectorAll('.underline-blank');
+        let lueckeAttempts = 0;
+
+        wordChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (chip.classList.contains('used')) return;
+                wordChips.forEach(c => c.style.borderColor = 'transparent');
+                chip.style.borderColor = '#f97316';
+                activeWord = chip.dataset.word;
+                activeWordEl = chip;
+            });
+        });
+
+        underlineBlanks.forEach(blank => {
+            blank.addEventListener('click', () => {
+                if (!activeWord) return;
+                if (blank.classList.contains('filled')) return;
+
+                const target = blank.dataset.target;
+                if (activeWord === target) {
+                    blank.textContent = activeWord;
+                    blank.classList.add('filled');
+                    activeWordEl.classList.add('used');
+                    activeWord = null;
+                    activeWordEl = null;
+                    checkHeftCompletion();
+                } else {
+                    lueckeAttempts++;
+                    const originalText = blank.textContent;
+                    blank.innerHTML = '<span class="text-rose-500 font-bold">X</span>';
+                    setTimeout(() => {
+                        blank.textContent = originalText;
+                    }, 800);
+                }
+            });
+        });
+
+        function checkHeftCompletion() {
+            const allFilled = Array.from(underlineBlanks).every(b => b.classList.contains('filled'));
+            if (allFilled) {
+                document.getElementById('heft-feedback').classList.remove('hidden');
+                document.getElementById('btn-to-sec7').classList.remove('hidden');
+
+                ProgressTracker.updateTask('lueckentext', true);
+                document.getElementById('badge-status-6').textContent = '✅ Gelöst';
+                document.getElementById('badge-status-6').className = 'text-xs text-emerald-400 font-bold';
+                updateProgressBar();
+            }
+        }
+    </script>
+</body>
+</html>

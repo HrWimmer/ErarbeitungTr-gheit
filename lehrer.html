@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lehrer-Dashboard: Physik 8</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #080c14;
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 md:p-12 space-y-10">
+
+    <!-- Header Section -->
+    <header class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
+        <div>
+            <h1 class="text-2xl font-black text-white flex items-center gap-2">
+                🧑‍🏫 Lehrer-Überwachungskonsole
+            </h1>
+            <p class="text-xs text-slate-400">Live-Fortschritt der Schulklasse &bull; Ph 8.3 Mechanik</p>
+        </div>
+        
+        <!-- Global Password Form -->
+        <div class="bg-slate-900 border border-slate-850 p-4 rounded-2xl flex items-center gap-4">
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase block">Globales Freischalt-Passwort:</label>
+                <input type="text" id="master-password-input" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-emerald-400 font-bold focus:outline-none w-36" placeholder="Physik8">
+            </div>
+            <button onclick="saveMasterPassword()" class="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition self-end">
+                Speichern
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-6xl mx-auto space-y-8">
+        
+        <!-- Live Students Table -->
+        <div class="bg-slate-900/60 border border-slate-850 rounded-3xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    👥 Aktive Schülerinnen &amp; Schüler <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2 py-0.5 rounded-full font-bold border border-emerald-500/20" id="student-count">0</span>
+                </h3>
+                <span class="text-xs text-slate-500">Updates erfolgen in Echtzeit</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                            <th class="py-3 px-4">Schüler (Name/ID)</th>
+                            <th class="py-3 px-4">Zuletzt Aktiv</th>
+                            <th class="py-3 px-4 text-center">Fortschritt</th>
+                            <th class="py-3 px-4 text-center">Sim-MC</th>
+                            <th class="py-3 px-4 text-center">Denkaufgabe</th>
+                            <th class="py-3 px-4 text-center">A: 90km/h</th>
+                            <th class="py-3 px-4 text-center">B: Verzögerung</th>
+                            <th class="py-3 px-4 text-center">Lückentext</th>
+                            <th class="py-3 px-4 text-center">C: Zug</th>
+                            <th class="py-3 px-4 text-center">Zuordnung</th>
+                            <th class="py-3 px-4 text-center">MC-Set</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-table-body" class="divide-y divide-slate-800/50">
+                        <!-- Wird dynamisch befüllt -->
+                        <tr id="empty-row">
+                            <td colspan="11" class="py-8 text-center text-slate-500 italic">Noch keine Schüler-Daten vorhanden. Starte ein Lernmodul in einem anderen Tab, um Fortschritte zu sehen.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Tracker-Skript (Firebase läuft im LocalStorage-Mock-Modus) -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMasterPassword();
+            listenToProgress();
+        });
+
+        // 1. Passwort laden
+        async function loadMasterPassword() {
+            try {
+                const doc = await db.collection('passwords').doc('mechanik').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data && data.password) {
+                        document.getElementById('master-password-input').value = data.password;
+                    }
+                } else {
+                    document.getElementById('master-password-input').value = "Physik8";
+                }
+            } catch (e) {
+                console.error("Fehler beim Laden des Passworts:", e);
+            }
+        }
+
+        // 2. Passwort speichern
+        async function saveMasterPassword() {
+            const pass = document.getElementById('master-password-input').value.trim();
+            if (!pass) return;
+
+            try {
+                await db.collection('passwords').doc('mechanik').set({ password: pass });
+                alert("Master-Passwort erfolgreich gespeichert!");
+            } catch (e) {
+                console.error("Fehler beim Speichern des Passworts:", e);
+                alert("Fehler beim Speichern: " + e.message);
+            }
+        }
+
+        // 3. Schülerfortschritt live abhören
+        function listenToProgress() {
+            db.collection('progress').onSnapshot((querySnapshot) => {
+                const tbody = document.getElementById('student-table-body');
+                tbody.innerHTML = '';
+
+                let count = 0;
+                querySnapshot.forEach((doc) => {
+                    count++;
+                    const data = doc.data();
+                    const progress = data.progress || {};
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-slate-900/30 transition-colors';
+
+                    // Letzte Aktivität formatieren
+                    let timeStr = 'Unbekannt';
+                    if (data.lastActive) {
+                        const date = new Date(data.lastActive);
+                        timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    }
+
+                    row.innerHTML = `
+                        <td class="py-3 px-4 font-bold text-white">${data.studentName || data.studentId}</td>
+                        <td class="py-3 px-4 text-slate-400 font-mono">${timeStr}</td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-20 bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                                    <div class="bg-indigo-500 h-full" style="width: ${data.percent || 0}%"></div>
+                                </div>
+                                <span class="font-bold text-[10px] text-indigo-400 font-mono">${data.percent || 0}%</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.simulation ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.kitutor ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.calca ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.calcb ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.lueckentext ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.calcd ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.zuordnung ? '🟢' : '⚪'}</td>
+                        <td class="py-3 px-4 text-center text-lg">${progress.mcset ? '🟢' : '⚪'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('student-count').textContent = count;
+
+                if (count === 0) {
+                    tbody.innerHTML = `
+                        <tr id="empty-row">
+                            <td colspan="11" class="py-8 text-center text-slate-500 italic">Noch keine Schüler-Daten vorhanden. Starte ein Lernmodul in einem anderen Tab, um Fortschritte zu sehen.</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

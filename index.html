@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physik 8: Mechanik Selbstlernkurs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0b0f19;
+            color: #f8fafc;
+        }
+        .glow-orange:hover {
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.4);
+            border-color: rgba(249, 115, 22, 0.6);
+        }
+        .glow-blue:hover {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🧭</span>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-500">
+                        Physik 8.3 Mechanik
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">Selbstlern-Plattform Gymnasium Bayern</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Password button -->
+                <button onclick="togglePasswordModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                    🔑 Lehrer-Freischaltung
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Section -->
+    <main class="max-w-6xl w-full mx-auto px-4 py-12 flex-grow space-y-12">
+        
+        <!-- Welcome Header -->
+        <div class="text-center space-y-3 max-w-2xl mx-auto">
+            <span class="bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-500/20">
+                Lernbereich Mechanik
+            </span>
+            <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
+                Entdecke die Gesetze der Bewegung
+            </h2>
+            <p class="text-sm md:text-base text-slate-400 leading-relaxed">
+                Willkommen beim interaktiven Physik-Kurs. Bearbeite die Lernmodule nacheinander. Der Fortschritt wird automatisch gespeichert und an deine Lehrkraft übertragen.
+            </p>
+        </div>
+
+        <!-- Dashboard Modules Grid -->
+        <div class="grid grid-cols-1 gap-8 max-w-sm mx-auto">
+            
+            <!-- CARD 1: Trägheitssatz (Lernmodul -> Orange) -->
+            <div class="bg-slate-900/40 rounded-3xl p-6 border border-slate-800/80 transition-all duration-300 glow-orange flex flex-col justify-between h-[360px] relative overflow-hidden group">
+                <div class="absolute -right-16 -top-16 w-32 h-32 bg-orange-600/10 rounded-full blur-3xl group-hover:bg-orange-600/20 transition-all duration-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="bg-orange-500/10 text-orange-400 text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-orange-500/20">
+                            Lernmodul
+                        </span>
+                        <span class="text-3xl">🚛</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">
+                        Der Trägheitssatz
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                        Warum fliegt die Kiste beim Bremsen vom Lkw? Lerne das erste Newtonsche Axiom kennen, teste es in der interaktiven Impuls-Simulation und löse die Transfer-Denkaufgaben.
+                    </p>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Progress bar -->
+                    <div>
+                        <div class="flex justify-between text-[10px] text-slate-500 font-bold mb-1.5">
+                            <span>FORTSCHRITT</span>
+                            <span id="ts-progress-percent" class="text-orange-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                            <div id="ts-progress-bar" class="bg-orange-500 h-full w-[0%] transition-all duration-500"></div>
+                        </div>
+                    </div>
+
+                    <a href="traegheitssatz.html" class="block text-center py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-orange-950/20">
+                        Starten ➔
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 z-50">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-sm w-full space-y-6 shadow-2xl">
+            <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                🔑 Master-Freischaltung
+            </h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Gib das von deiner Lehrkraft vergebene Passwort ein, um sofort alle Sektionen dieses Themengebiets freizuschalten.
+            </p>
+            <div class="space-y-2">
+                <input type="password" id="unlock-password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Passwort eingeben...">
+                <p id="password-error" class="text-[11px] text-red-500 hidden font-bold">Inkorrektes Passwort!</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="togglePasswordModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
+                    Abbrechen
+                </button>
+                <button onclick="submitUnlockPassword()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">
+                    Freischalten
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-[10px] text-slate-500 font-medium">
+        <p>&copy; 2026 Physik interaktiv. Lerneinheit 8.3 Mechanik &bull; Gymnasium Bayern</p>
+    </footer>
+
+    <!-- Tracker Skripte einbinden (Firebase läuft im LocalStorage-Mock-Modus) -->
+    <script src="firebase-config.js"></script>
+    <script src="progress-tracker.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialisiere Tracker für 'traegheitssatz'
+            ProgressTracker.init('traegheitssatz');
+
+            // Live-Sync für UI Fortschritt
+            updateUI(ProgressTracker.progress);
+            window.addEventListener('progress-changed', (e) => {
+                updateUI(e.detail);
+            });
+
+            // Wenn Passwort bereits freigeschaltet ist
+            if (ProgressTracker.isPasswordUnlocked()) {
+                document.getElementById('ts-progress-percent').textContent = '100% (Freigeschaltet)';
+                document.getElementById('ts-progress-bar').style.width = '100%';
+            }
+        });
+
+        function updateUI(progress) {
+            if (ProgressTracker.isPasswordUnlocked()) {
+                document.getElementById('ts-progress-percent').textContent = '100% (Freigeschaltet)';
+                document.getElementById('ts-progress-bar').style.width = '100%';
+                return;
+            }
+            
+            const SCORED_TASKS = ['simulation', 'kitutor', 'calca', 'calcb', 'lueckentext', 'calcd', 'zuordnung', 'mcset'];
+            const solved = SCORED_TASKS.filter(task => progress[task]).length;
+            const percent = Math.min(100, Math.round((solved / SCORED_TASKS.length) * 100));
+
+            document.getElementById('ts-progress-percent').textContent = percent + '%';
+            document.getElementById('ts-progress-bar').style.width = percent + '%';
+        }
+
+        // Modal togglen
+        function togglePasswordModal() {
+            const modal = document.getElementById('password-modal');
+            const isOpen = modal.classList.contains('opacity-100');
+            if (isOpen) {
+                modal.classList.remove('opacity-100', 'pointer-events-auto');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                document.getElementById('password-error').classList.add('hidden');
+            } else {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.classList.add('opacity-100', 'pointer-events-auto');
+                document.getElementById('unlock-password').focus();
+            }
+        }
+
+        // Passwort absenden
+        async function submitUnlockPassword() {
+            const passInput = document.getElementById('unlock-password');
+            const pass = passInput.value;
+            const success = await ProgressTracker.checkGlobalPassword(pass);
+            
+            if (success) {
+                togglePasswordModal();
+                updateUI(ProgressTracker.progress);
+                location.reload(); // Seite neu laden, um Freischaltung zu übernehmen
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
+                passInput.value = '';
+                passInput.focus();
+            }
+        }
+    </script>
+</body>
+</html>
