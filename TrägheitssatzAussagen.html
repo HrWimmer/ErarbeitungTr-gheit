@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktives Lernen: Das Trägheitsgesetz (Physik 8. Klasse)</title>
+    <!-- Tailwind CSS for Modern Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter for Readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Custom pulsing for the hyper-visible reset button */
+        @keyframes pulse-border {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .btn-reset-pulse {
+            animation: pulse-border 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header with Gamified Stats -->
+    <header class="bg-gradient-to-r from-indigo-800 to-violet-950 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🚗💥</span>
+                <div>
+                    <h1 class="font-extrabold text-lg md:text-xl tracking-tight">Trägheits-Studio 8.0</h1>
+                    <p class="text-xs text-indigo-200">Physik Klasse 8 | Interaktives Test- und Simulationsportal</p>
+                </div>
+            </div>
+            <!-- Highscores and Progress -->
+            <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+                <div class="bg-white/10 px-3 py-1.5 rounded-full border border-white/20 flex items-center space-x-1.5 text-xs md:text-sm font-semibold">
+                    <span class="text-yellow-400">⭐</span>
+                    <span>Standard-Aufgaben: <span id="main-score" class="font-bold text-yellow-300">0</span> / 6 gelöst</span>
+                </div>
+                <div class="bg-white/10 px-3 py-1.5 rounded-full border border-white/20 flex items-center space-x-1.5 text-xs md:text-sm font-semibold">
+                    <span class="text-orange-400">🔥</span>
+                    <span>Streak: <span id="trainer-streak" class="font-bold text-orange-300">0</span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow space-y-10">
+
+        <!-- Simulation: The Crash Test / Inertia Car -->
+        <section class="bg-slate-900 rounded-2xl p-6 shadow-xl text-white border border-slate-800">
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Left Control Panel -->
+                <div class="w-full lg:w-1/3 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <span class="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-1 rounded-full border border-indigo-500/30 uppercase tracking-wider">
+                            Live-Experiment
+                        </span>
+                        <h2 class="text-2xl font-black text-yellow-300 mt-2">🔍 Crashtest: Trägheit im Pkw</h2>
+                        <p class="text-sm text-slate-300 mt-1 leading-relaxed">
+                            Beobachte die orange Kiste auf dem Autodach. Was passiert beim Beschleunigen oder beim abrupten Aufprall? Nutze den Zeitlupenmodus für eine genaue Analyse!
+                        </p>
+                    </div>
+
+                    <!-- Simulator Controls -->
+                    <div class="space-y-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700/60">
+                        
+                        <!-- Speed Control Selector (Slow Motion) -->
+                        <div class="space-y-1.5">
+                            <span class="text-xs text-slate-400 font-semibold block">⏱️ Zeit-Modus (Simulationstempo):</span>
+                            <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-lg border border-slate-700">
+                                <button onclick="setSimSpeed(1.0)" id="speed-btn-1" class="bg-indigo-600 text-white text-xs py-1 rounded font-bold transition">1.0x (Normal)</button>
+                                <button onclick="setSimSpeed(0.5)" id="speed-btn-05" class="hover:bg-slate-800 text-slate-300 text-xs py-1 rounded font-bold transition">0.5x (Halb)</button>
+                                <button onclick="setSimSpeed(0.2)" id="speed-btn-02" class="hover:bg-slate-800 text-slate-300 text-xs py-1 rounded font-bold transition">0.2x (Super-Slow)</button>
+                            </div>
+                        </div>
+
+                        <!-- Seatbelt Checkbox -->
+                        <div class="flex items-center space-x-3 bg-slate-900/50 p-2.5 rounded-lg border border-slate-700">
+                            <input type="checkbox" id="sim-strapped" class="w-4 h-4 text-emerald-500 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500 focus:ring-2">
+                            <label for="sim-strapped" class="text-xs md:text-sm font-bold text-emerald-400 cursor-pointer select-none flex items-center space-x-1.5">
+                                <span>🔒 Ladungssicherung (Kraftgurt) aktiv</span>
+                            </label>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-sim-gas" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-lg text-xs md:text-sm flex flex-col items-center justify-center transition active:scale-95">
+                                <span class="flex items-center space-x-1">⚡ <span>Gas geben</span></span>
+                                <span class="text-[10px] font-normal opacity-70">(Beschleunigung)</span>
+                            </button>
+                            <button id="btn-sim-brake" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-3 rounded-lg text-xs md:text-sm flex flex-col items-center justify-center transition active:scale-95">
+                                <span class="flex items-center space-x-1">🛑 <span>Aufprall!</span></span>
+                                <span class="text-[10px] font-normal opacity-70">(Plötzlicher Stopp)</span>
+                            </button>
+                        </div>
+
+                        <!-- ULTRA PROMINENT RESET BUTTON -->
+                        <div class="pt-2">
+                            <button id="btn-sim-reset" class="btn-reset-pulse w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black py-3.5 px-4 rounded-xl text-xs md:text-sm tracking-wider uppercase shadow-[0_0_15px_rgba(245,158,11,0.4)] transition active:scale-95 border-2 border-yellow-300">
+                                🔄 Experiment zurücksetzen
+                            </button>
+                        </div>
+
+                        <div class="text-center text-xs text-slate-400 pt-1">
+                            Zustand: <span id="sim-state" class="font-bold text-yellow-400">Steht am Start</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Physics Readout -->
+                    <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                            <span class="text-slate-400">Geschw. Auto</span>
+                            <div id="readout-car-v" class="text-base font-bold text-sky-400">0 km/h</div>
+                        </div>
+                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                            <span class="text-slate-400">Geschw. Kiste</span>
+                            <div id="readout-box-v" class="text-base font-bold text-amber-400">0 km/h</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Canvas Screen -->
+                <div class="w-full lg:w-2/3 flex flex-col justify-between">
+                    <div class="relative w-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 h-64 md:h-80">
+                        <!-- Simulation Screen Overlay -->
+                        <div class="absolute top-2 left-2 text-[10px] md:text-xs bg-slate-900/90 px-2.5 py-1 rounded text-slate-400 border border-slate-800 pointer-events-none z-10">
+                            Echtzeit-Physik-Visualisierung
+                        </div>
+                        <div id="sim-explanation" class="absolute bottom-2 left-2 right-2 text-center text-[11px] md:text-xs bg-slate-900/95 py-2 px-3 rounded-lg text-indigo-300 border border-indigo-950/40 pointer-events-none z-10 transition-opacity duration-300">
+                            Klicke auf "Gas geben", um loszufahren. Beobachte, in welche Richtung die Kiste rutscht!
+                        </div>
+                        <!-- Canvas -->
+                        <canvas id="crashtestCanvas" class="w-full h-full block"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PART 1: Everyday Situations (Alltagsszenarien) -->
+        <section class="space-y-6">
+            <div class="border-b border-slate-200 pb-2">
+                <h2 class="text-2xl font-extrabold text-slate-900">🚦 Teil 1: Trägheit im Alltag (Multiple Choice)</h2>
+                <p class="text-sm text-slate-500">Analysiere reale Situationen. <strong>Achtung:</strong> Es können pro Aufgabe <strong>eine oder mehrere</strong> Antworten korrekt sein! Wähle alle passenden Aussagen aus.</p>
+            </div>
+
+            <!-- Grid of 4 Scenarios -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Scenario 1: Der Bus-Ruck -->
+                <div id="card-scen-1" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between transition duration-300">
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🚌</span>
+                            <h3 class="font-bold text-slate-900 text-sm md:text-base">1. Der anfahrende Bus</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Du stehst entspannt im Bus. Plötzlich fährt dieser mit einem kräftigen Ruck <strong>nach vorne</strong> los. Was passiert und wie wird dies physikalisch korrekt beschrieben?
+                        </p>
+                        
+                        <div class="space-y-1.5 pt-1" id="options-scen1">
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen1" value="A" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Ich werde scheinbar nach hinten geworfen, da mein Körper aufgrund der Trägheit in Ruhe verharren will, während der Bus unter mir wegzieht.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen1" value="B" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Der Motor des Busses erzeugt beim Anfahren eine magnetische Kraft, die Passagiere abstößt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen1" value="C" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Es wirkt im ersten Moment keine ausreichende äußere Kraft nach vorne auf meinen Oberkörper, weshalb dieser seinen Ruhezustand beizubehalten versucht.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen1" value="D" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Eine aktive "Trägheitskraft" zieht meinen Körper mit der gleichen Stärke nach hinten, wie der Bus nach vorne beschleunigt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen1" value="E" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Der Effekt tritt nur auf, wenn der Bus auf einer perfekt reibungsfreien Schiene fährt.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Check and Feedback Footer -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <button onclick="toggleHint('hint-scen1')" class="text-xs text-indigo-600 hover:underline">💡 Tipp</button>
+                            <button onclick="checkScenario(1, ['A', 'C'])" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">Überprüfen</button>
+                        </div>
+                        <p id="hint-scen1" class="hidden text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100">Überlege: Welchen Zustand hat dein Körper vor dem Anfahren (Ruhe)? Es sind 2 Antworten richtig!</p>
+                        <div id="feedback-scen1" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Scenario 2: Teppich ausklopfen -->
+                <div id="card-scen-2" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between transition duration-300">
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🧹</span>
+                            <h3 class="font-bold text-slate-900 text-sm md:text-base">2. Staubige Teppiche</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Hängt man einen schmutzigen Teppich auf die Stange und schlägt mit dem Teppichklopfer fest dagegen, löst sich der Staub. Welche physikalischen Argumente stimmen?
+                        </p>
+                        
+                        <div class="space-y-1.5 pt-1" id="options-scen2">
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen2" value="A" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Die trägen Staubteilchen verharren aufgrund des Trägheitsgesetzes an ihrem Ort in Ruhe, während das Teppichgewebe beschleunigt und weggestoßen wird.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen2" value="B" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Der Staub wird durch die Wucht des Schlags mit großer Geschwindigkeit in Richtung des Teppichklopfers zurückgesaugt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen2" value="C" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Durch den Schlag wird auf den Teppich eine Kraft ausgeübt, die ihn in Bewegung versetzt. Der Staub ist von dieser direkten Krafteinwirkung im ersten Moment entkoppelt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen2" value="D" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Die Trägheit veranlasst den Teppichklopfer dazu, schwerelos zu werden, um den Staub schmerzfrei freizulassen.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen2" value="E" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Der Staub fällt nur herab, weil er magnetisch vom Erdboden angezogen wird, sobald der Teppich vibriert.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Check and Feedback Footer -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <button onclick="toggleHint('hint-scen2')" class="text-xs text-indigo-600 hover:underline">💡 Tipp</button>
+                            <button onclick="checkScenario(2, ['A', 'C'])" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">Überprüfen</button>
+                        </div>
+                        <p id="hint-scen2" class="hidden text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100">Was bewegt sich durch den Hieb aktiv und was verharrt zunächst träge am alten Fleck? Es sind 2 Antworten richtig!</p>
+                        <div id="feedback-scen2" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Scenario 3: Der stolpernde Läufer -->
+                <div id="card-scen-3" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between transition duration-300">
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🏃</span>
+                            <h3 class="font-bold text-slate-900 text-sm md:text-base">3. Der Stolperstein</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Ein Läufer stolpert plötzlich über eine im Boden verborgene Baumwurzel. Er stürzt nach vorne. Welche physikalischen Argumente erklären dieses Alltagsphänomen?
+                        </p>
+                        
+                        <div class="space-y-1.5 pt-1" id="options-scen3">
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen3" value="A" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Auf die Füße des Läufers wirkt durch die Wurzel eine abrupte Bremskraft, die sie sofort zum Stillstand bringt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen3" value="B" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Auf den Oberkörper wirkt im Moment des Stolperns keine direkte Bremskraft, weshalb er sich träge mit der bisherigen Vorwärtsgeschwindigkeit weiterbewegt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen3" value="C" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Eine aktive "Vorwärtskraft" der Trägheit packt den Läufer an den Schultern und schleudert ihn aktiv zu Boden.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen3" value="D" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Der Läufer stürzt nach vorne, weil die Luft vor ihm plötzlich einen Unterdruck erzeugt und ihn nach vorne saugt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen3" value="E" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Da der Oberkörper die Bewegung beibehalten will, während die Füße stoppen, kippt der Körper nach vorne über.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Check and Feedback Footer -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <button onclick="toggleHint('hint-scen3')" class="text-xs text-indigo-600 hover:underline">💡 Tipp</button>
+                            <button onclick="checkScenario(3, ['A', 'B', 'E'])" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">Überprüfen</button>
+                        </div>
+                        <p id="hint-scen3" class="hidden text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100">Überlege, welcher Körperteil abrupt gestoppt wird und welcher weiterfliegen möchte. Es sind sogar 3 Antworten korrekt!</p>
+                        <div id="feedback-scen3" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Scenario 4: Die scharfe Kurve -->
+                <div id="card-scen-4" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between transition duration-300">
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl">🏎️</span>
+                            <h3 class="font-bold text-slate-900 text-sm md:text-base">4. Die scharfe Rechtskurve</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Ein Auto fährt sehr schnell durch eine enge Kurve nach **rechts**. Die Beifahrerin fühlt sich an die linke Wagentür gedrückt. Wie erklärt man das physikalisch sauber?
+                        </p>
+                        
+                        <div class="space-y-1.5 pt-1" id="options-scen4">
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen4" value="A" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Ihr Körper versucht sich aufgrund der Trägheit geradlinig (geradeaus) weiterzubewegen, während das Auto unter ihr nach rechts fährt.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen4" value="B" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Die linke Tür übt eine Kraft nach rechts auf die Beifahrerin aus, um sie mit dem Auto auf die Kurvenbahn zu zwingen.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen4" value="C" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Die Trägheit drückt die Beifahrerin aktiv mit einer starken Magnetkraft nach außen.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen4" value="D" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Es gibt keine physikalische Erklärung; das Gefühl basiert nur auf psychologischer Einbildung der Beifahrerin.</span>
+                            </label>
+                            <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer text-xs space-x-2.5">
+                                <input type="checkbox" name="scen4" value="E" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Da der Wagen seine Richtung ändert, die Fahrerin aber träge ist, kollidiert die linke Fahrzeugseite mit ihr.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Check and Feedback Footer -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <button onclick="toggleHint('hint-scen4')" class="text-xs text-indigo-600 hover:underline">💡 Tipp</button>
+                            <button onclick="checkScenario(4, ['A', 'B', 'E'])" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">Überprüfen</button>
+                        </div>
+                        <p id="hint-scen4" class="hidden text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100">Der Trägheitssatz besagt: Ohne äußere Richtungsänderungskräfte bewegt sich jeder Körper stur geradlinig weiter! 3 Antworten stimmen.</p>
+                        <div id="feedback-scen4" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PART 2: Core Physics Tasks (Lückentext & All-Voyager) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Task 5: Fill in blanks -->
+            <div id="card-scen-5" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition duration-300">
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">5</span>
+                        <h3 class="font-bold text-slate-900 text-base">Der klassische Lückentext</h3>
+                    </div>
+                    <p class="text-xs text-slate-500">
+                        Vervollständige die Definition des 1. Newtonschen Axioms (Trägheitsgesetz) exakt.
+                    </p>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 leading-relaxed text-xs md:text-sm text-slate-700 space-y-2">
+                        <span>Ein Körper verharrt im Zustand der</span>
+                        <select id="luecke-1" class="bg-white border border-slate-300 rounded px-1.5 py-0.5 font-semibold text-indigo-700 focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- wählen --</option>
+                            <option value="bewegung">Bewegung</option>
+                            <option value="ruhe">Ruhe</option>
+                            <option value="beschleunigung">Beschleunigung</option>
+                        </select>
+                        <span>oder der gleichförmig</span>
+                        <select id="luecke-2" class="bg-white border border-slate-300 rounded px-1.5 py-0.5 font-semibold text-indigo-700 focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- wählen --</option>
+                            <option value="kreisenden">kreisenden</option>
+                            <option value="geradlinigen">geradlinigen</option>
+                            <option value="verzögerten">verzögerten</option>
+                        </select> 
+                        <span>Bewegung, solange keine resultierenden äußeren</span>
+                        <select id="luecke-3" class="bg-white border border-slate-300 rounded px-1.5 py-0.5 font-semibold text-indigo-700 focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- wählen --</option>
+                            <option value="geschwindigkeiten">Geschwindigkeiten</option>
+                            <option value="massen">Massen</option>
+                            <option value="kraefte">Kräfte</option>
+                        </select> 
+                        <span>auf ihn wirken.</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <button onclick="toggleHint('hint-scen5')" class="text-xs text-indigo-600 hover:underline">💡 Tipp</button>
+                        <button onclick="checkTask5()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition">Satz prüfen</button>
+                    </div>
+                    <p id="hint-scen5" class="hidden text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100">Überlege: Welche Bewegung vollführt ein kräftefreies Objekt im tiefen, leeren Weltraum?</p>
+                    <div id="feedback-scen5" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- Task 6: Voyager Space Probe Concept (Multiple Choice with 5 choices) -->
+            <div id="card-scen-6" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition duration-300">
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">6</span>
+                        <h3 class="font-bold text-slate-900 text-base">Fahrt im Vakuum: Voyager 1</h3>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Die Raumsonde <em>Voyager 1</em> fliegt mit ca. 17 km/s durch den fast leeren interstellaren Raum. Ihre Triebwerke sind seit Jahrzehnten komplett ausgeschaltet. Welche Aussagen beschreiben die Physik dahinter korrekt? (Mehrfachauswahl möglich!)
+                    </p>
+
+                    <div class="space-y-1.5 pt-1 text-xs" id="options-scen6">
+                        <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer space-x-2.5">
+                            <input type="checkbox" name="scen6" value="A" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span>Auf Voyager 1 wirkt eine kontinuierliche Trägheitskraft, die die Sonde wie ein Triebwerk aktiv nach vorne anschiebt.</span>
+                        </label>
+                        <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer space-x-2.5">
+                            <input type="checkbox" name="scen6" value="B" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span>Es gibt im interstellaren Vakuum praktisch keine nennenswerten Reibungskräfte (Gase), die die Sonde abbremsen könnten.</span>
+                        </label>
+                        <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer space-x-2.5">
+                            <input type="checkbox" name="scen6" value="C" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span>Weil keine resultierende äußere Kraft auf sie wirkt, behält die Sonde ihren Bewegungszustand (Geschwindigkeit und Richtung) unbegrenzt bei.</span>
+                        </label>
+                        <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer space-x-2.5">
+                            <input type="checkbox" name="scen6" value="D" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span>Sobald die Triebwerke stoppen, müsste die Sonde theoretisch sofort stehenbleiben, wird aber von der Hintergrundstrahlung gezogen.</span>
+                        </label>
+                        <label class="flex items-start p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer space-x-2.5">
+                            <input type="checkbox" name="scen6" value="E" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span>Trägheit ist eine grundlegende Eigenschaft der Masse der Sonde, keine Kraft. Sie sorgt für den Erhalt der Geschwindigkeit.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <button onclick="toggleHint('hint-scen6')" class="text-xs text-indigo-600 hover:underline">💡 Tipp</button>
+                        <button onclick="checkScenario(6, ['B', 'C', 'E'])" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition">Überprüfen</button>
+                    </div>
+                    <p id="hint-scen6" class="hidden text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100">Bedenke: Trägheit ist keine Kraft, sondern das Bestreben eines Körpers, seinen Zustand zu behalten. 3 Antworten sind richtig!</p>
+                    <div id="feedback-scen6" class="hidden text-xs font-semibold p-2.5 rounded-lg"></div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PART 3: Infinite Inertia Trainer -->
+        <section class="bg-gradient-to-br from-violet-900 via-indigo-950 to-slate-950 text-white rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden border border-violet-800/40">
+            <!-- Background Decorative Orbs -->
+            <div class="absolute -right-24 -bottom-24 w-72 h-72 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-24 -top-24 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 max-w-3xl mx-auto text-center space-y-6">
+                <div class="inline-flex items-center space-x-2 bg-violet-800/50 border border-violet-600/40 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-violet-300">
+                    <span class="animate-ping w-2 h-2 rounded-full bg-violet-400"></span>
+                    <span>Modus: Endlos-Trägheits-Trainer</span>
+                </div>
+                
+                <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">🏆 Der bayerische Trägheits-Meister</h2>
+                <p class="text-slate-300 text-xs md:text-sm max-w-lg mx-auto">
+                    Trainiere dein physikalisches Gespür! Löse abwechslungsreiche Kurzfragen und baue eine feurige Punkte-Streak auf.
+                </p>
+
+                <!-- Trainer Arena -->
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/10 text-left space-y-4">
+                    <!-- Stat Bar -->
+                    <div class="flex justify-between items-center text-xs text-indigo-300 font-semibold border-b border-white/10 pb-2.5">
+                        <div>Frage: <span id="trainer-count" class="text-white">1</span></div>
+                        <div>Meisterpunkte: <span id="trainer-points" class="text-yellow-300 font-bold">0</span></div>
+                        <div>Multiplikator: <span id="trainer-mult" class="text-orange-400 font-bold">1.0x</span></div>
+                    </div>
+
+                    <!-- Question text -->
+                    <div id="trainer-question-box" class="text-sm md:text-base font-medium text-slate-100 leading-relaxed">
+                        Lade Frage...
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div id="trainer-options" class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Interactive result state -->
+                    <div id="trainer-feedback" class="hidden text-center text-xs font-bold py-2 px-4 rounded-xl"></div>
+                </div>
+
+                <!-- Action Button for Trainer -->
+                <button id="btn-trainer-next" onclick="nextTrainerQuestion()" class="hidden w-full md:w-auto bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black px-8 py-3 rounded-xl text-xs md:text-sm shadow-lg transition active:scale-95">
+                    Nächste Frage ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Dynamic Congratulations Section (Initially Hidden) -->
+        <section id="cert-section" class="hidden bg-gradient-to-r from-yellow-100 to-amber-200 border-2 border-yellow-400 rounded-2xl p-6 md:p-8 text-center shadow-lg space-y-4 animate-fade-in">
+            <span class="text-5xl animate-bounce inline-block">🏆</span>
+            <h3 class="text-2xl font-black text-slate-900">Physikalische Glanzleistung!</h3>
+            <p class="text-slate-800 font-medium max-w-xl mx-auto text-sm">
+                Du hast alle 6 Standard-Herausforderungen zum Trägheitssatz fehlerfrei gemeistert. Dein Verständnis für das erste Newtonsche Gesetz ist nun exzellent!
+            </p>
+            <div class="inline-block bg-white px-5 py-2 rounded-full font-bold shadow-sm text-yellow-800 text-xs border border-yellow-300">
+                🎓 Trägheits-Experte der 8. Klasse
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs mt-12">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 Physik interaktiv - Gemäß LehrplanPLUS Bayern (Gymnasium 8. Klasse)</p>
+            <div class="flex space-x-4">
+                <span class="hover:text-white transition cursor-default">Inhalte: Trägheitsgesetz</span>
+                <span class="hover:text-white transition cursor-default">Simulation: Crashtest Pkw (Zeitlupe)</span>
+                <span class="hover:text-white transition cursor-default">Responsive Multiple Choice</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // State of Standard Tasks (6 in total)
+        const taskState = {
+            1: false,
+            2: false,
+            3: false,
+            4: false,
+            5: false,
+            6: false
+        };
+
+        // UI toggling helper
+        function toggleHint(hintId) {
+            const hint = document.getElementById(hintId);
+            hint.classList.toggle('hidden');
+        }
+
+        // Advanced Checker for Multiple-Choice (Checkboxes)
+        function checkScenario(taskNum, correctAnswersArray) {
+            const container = document.getElementById(`options-scen${taskNum}`);
+            const feedback = document.getElementById(`feedback-scen${taskNum}`);
+            const card = document.getElementById(`card-scen${taskNum}`);
+            
+            // Get all checked checkboxes
+            const checkedBoxes = Array.from(container.querySelectorAll('input[type="checkbox"]:checked'));
+            const checkedValues = checkedBoxes.map(cb => cb.value);
+
+            feedback.classList.remove('hidden');
+
+            if (checkedValues.length === 0) {
+                feedback.className = "text-xs font-semibold p-2.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 mt-2";
+                feedback.innerHTML = "⚠️ Bitte wähle mindestens eine Antwortmöglichkeit aus!";
+                return;
+            }
+
+            // Verify if exact match
+            const isExactlyCorrect = 
+                checkedValues.length === correctAnswersArray.length && 
+                checkedValues.every(val => correctAnswersArray.includes(val));
+
+            // Visual marking of individual answers (green for correct selected, red for wrong selected, etc.)
+            const allLabels = container.querySelectorAll('label');
+            allLabels.forEach(label => {
+                const checkbox = label.querySelector('input');
+                const val = checkbox.value;
+                const isCorrectOption = correctAnswersArray.includes(val);
+                const isSelected = checkbox.checked;
+
+                // Reset styling
+                label.className = "flex items-start p-2.5 rounded-lg border text-xs space-x-2.5 cursor-pointer transition";
+
+                if (isSelected) {
+                    if (isCorrectOption) {
+                        label.classList.add("bg-emerald-50", "border-emerald-500", "text-emerald-950");
+                    } else {
+                        label.classList.add("bg-red-50", "border-red-400", "text-red-950");
+                    }
+                } else {
+                    if (isCorrectOption) {
+                        // Correct but missed by student
+                        label.classList.add("bg-amber-50/50", "border-amber-300", "text-slate-700");
+                    } else {
+                        label.classList.add("border-slate-100", "text-slate-500");
+                    }
+                }
+            });
+
+            if (isExactlyCorrect) {
+                feedback.className = "text-xs font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 mt-2";
+                feedback.innerHTML = "🎉 Absolut perfekt! Du hast alle richtigen Kriterien exakt erkannt und begründet.";
+                card.className = "bg-white rounded-xl p-5 shadow-sm border-2 border-emerald-500 bg-emerald-50/10 flex flex-col justify-between transition duration-300";
+                
+                if (!taskState[taskNum]) {
+                    taskState[taskNum] = true;
+                    updateMainScore();
+                }
+            } else {
+                feedback.className = "text-xs font-semibold p-2.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 mt-2";
+                feedback.innerHTML = "❌ Noch nicht ganz richtig. Nutze den Tipp und schau, welche richtigen Aussagen du übersehen hast (orange umrandet) oder welche falschen du angekreuzt hattest (rot).";
+            }
+        }
+
+        // Lückentext Checker (Task 5)
+        function checkTask5() {
+            const l1 = document.getElementById('luecke-1').value;
+            const l2 = document.getElementById('luecke-2').value;
+            const l3 = document.getElementById('luecke-3').value;
+            const feedback = document.getElementById('feedback-scen5');
+            const card = document.getElementById('card-scen-5');
+
+            feedback.classList.remove('hidden');
+
+            if (!l1 || !l2 || !l3) {
+                feedback.className = "text-xs font-semibold p-2.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 mt-2";
+                feedback.innerHTML = "⚠️ Bitte fülle alle Lücken aus!";
+                return;
+            }
+
+            if (l1 === 'ruhe' && l2 === 'geradlinigen' && l3 === 'kraefte') {
+                feedback.className = "text-xs font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 mt-2";
+                feedback.innerHTML = "🎉 Perfekt! Du hast den Lehrplansatz absolut fehlerfrei ausgefüllt.";
+                card.className = "bg-white rounded-2xl p-6 shadow-sm border-2 border-emerald-500 bg-emerald-50/10 flex flex-col justify-between transition duration-300";
+
+                if (!taskState[5]) {
+                    taskState[5] = true;
+                    updateMainScore();
+                }
+            } else {
+                feedback.className = "text-xs font-semibold p-2.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 mt-2";
+                feedback.innerHTML = "❌ Einige Begriffe passen physikalisch noch nicht. Tipp: Wann bleibt die Geschwindigkeit exakt konstant? Wenn keine äußeren ... wirken.";
+            }
+        }
+
+        // Update overall score counter
+        function updateMainScore() {
+            let count = 0;
+            for (let i = 1; i <= 6; i++) {
+                if (taskState[i]) count++;
+            }
+            document.getElementById('main-score').innerText = count;
+
+            if (count === 6) {
+                const cert = document.getElementById('cert-section');
+                cert.classList.remove('hidden');
+                cert.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+
+        // ----------------- PHYSICS SIMULATION -----------------
+        const canvas = document.getElementById('crashtestCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Physics Speed multiplier (Default 1.0)
+        let simSpeed = 1.0;
+
+        function setSimSpeed(speedVal) {
+            simSpeed = speedVal;
+            // Update active buttons
+            document.getElementById('speed-btn-1').className = (speedVal === 1.0) ? "bg-indigo-600 text-white text-xs py-1 rounded font-bold transition" : "hover:bg-slate-800 text-slate-300 text-xs py-1 rounded font-bold transition";
+            document.getElementById('speed-btn-05').className = (speedVal === 0.5) ? "bg-indigo-600 text-white text-xs py-1 rounded font-bold transition" : "hover:bg-slate-800 text-slate-300 text-xs py-1 rounded font-bold transition";
+            document.getElementById('speed-btn-02').className = (speedVal === 0.2) ? "bg-indigo-600 text-white text-xs py-1 rounded font-bold transition" : "hover:bg-slate-800 text-slate-300 text-xs py-1 rounded font-bold transition";
+        }
+
+        // Physics State Setup
+        let car = {
+            x: 50,
+            y: 190,
+            width: 140,
+            height: 45,
+            v: 0,
+            targetV: 0,
+            a: 0.15
+        };
+
+        let box = {
+            rx: 50, // Relative x to car top-left
+            v: 0,   // Relative speed on roof
+            yOffset: -30, // roof offset
+            width: 32,
+            height: 30,
+            isAirborne: false,
+            ax: 0,
+            ay: 0,
+            x: 0,
+            y: 0
+        };
+
+        let wall = {
+            x: 0,
+            width: 30,
+            height: 120
+        };
+
+        let particles = [];
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            wall.x = canvas.width - 50;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // UI Event triggers
+        document.getElementById('btn-sim-gas').addEventListener('click', () => {
+            if (box.isAirborne) return;
+            car.targetV = 4.5; // speed up
+            document.getElementById('sim-state').innerText = "Beschleunigt...";
+            document.getElementById('sim-explanation').innerText = "Anfahreffekt: Das Auto beschleunigt nach vorne, die Kiste will wegen ihrer Trägheit in Ruhe verharren und rutscht relativ zum Autodach nach hinten!";
+        });
+
+        document.getElementById('btn-sim-brake').addEventListener('click', () => {
+            if (box.isAirborne || car.v < 0.2) return;
+            // Immediate braking/crash
+            car.targetV = 0;
+            car.v = 0; // sudden halt on crash
+            triggerInertialFlight();
+            document.getElementById('sim-state').innerText = "Vollbremsung / Crash!";
+            document.getElementById('sim-explanation').innerText = "Brems-Effekt: Das Auto stoppt abrupt. Da keine Haltekraft auf die Kiste wirkt, bewegt sich diese mit ihrer bisherigen Vorwärtsgeschwindigkeit ungestört weiter!";
+        });
+
+        document.getElementById('btn-sim-reset').addEventListener('click', resetSimulation);
+
+        function triggerInertialFlight() {
+            const isStrapped = document.getElementById('sim-strapped').checked;
+            if (isStrapped) {
+                document.getElementById('sim-explanation').innerText = "Gesichert! Der Gurt übt eine starke Haltekraft auf die Kiste aus, die sie synchron mit dem Auto abbremst.";
+                return;
+            }
+
+            // Fly off due to inertia
+            box.isAirborne = true;
+            box.x = car.x + box.rx;
+            box.y = car.y + box.yOffset;
+            box.v = 4.5; // preserved forward velocity
+            box.ay = 0;  // reset gravity accumulation
+            
+            // Create dust particles for shock
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: car.x + car.width,
+                    y: car.y + 10,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 1) * 3,
+                    life: 30,
+                    color: '#ef4444'
+                });
+            }
+        }
+
+        function resetSimulation() {
+            car.x = 50;
+            car.v = 0;
+            car.targetV = 0;
+            box.rx = 50;
+            box.v = 0;
+            box.isAirborne = false;
+            box.ay = 0;
+            particles = [];
+            document.getElementById('sim-state').innerText = "Steht am Start";
+            document.getElementById('sim-explanation').innerText = "Simulation zurückgesetzt. Klicke 'Gas geben' zum Starten.";
+        }
+
+        function updatePhysicsAndDraw() {
+            // Apply simulation speed multiplier
+            const dt = simSpeed;
+
+            // Update Car Velocity
+            if (!box.isAirborne) {
+                car.v += (car.targetV - car.v) * car.a * dt;
+                if (Math.abs(car.v) < 0.05) car.v = 0;
+                car.x += car.v * dt;
+
+                // Relative Box motion on Roof due to Acceleration Inertia
+                const isStrapped = document.getElementById('sim-strapped').checked;
+                if (!isStrapped && car.v > 0.1 && car.targetV > car.v) {
+                    box.rx -= 0.7 * dt; // slips backward due to inertia of rest
+                    if (box.rx < 5) box.rx = 5; // back limit of roof
+                }
+            } else {
+                // Box airborne calculations
+                box.x += box.v * dt;
+                box.y += box.ay * dt;
+                box.ay += 0.15 * dt; // gravity
+
+                // Hit Ground collision
+                if (box.y >= 200) {
+                    box.y = 200;
+                    box.v *= 0.7; // slide friction
+                    box.ay = 0;
+                    if (box.v < 0.1) box.v = 0;
+                    document.getElementById('sim-state').innerText = "Kiste abgestürzt!";
+                }
+            }
+
+            // Obstacle Wall trigger (auto crashes when reaching wall)
+            if (car.x + car.width >= wall.x) {
+                car.x = wall.x - car.width;
+                if (car.v > 1) {
+                    car.v = 0;
+                    car.targetV = 0;
+                    triggerInertialFlight();
+                    document.getElementById('sim-state').innerText = "AUFPRALL AN WAND!";
+                }
+            }
+
+            // Update UI speed text
+            const displayCarV = Math.round(car.v * 16);
+            const displayBoxV = Math.round((box.isAirborne ? box.v : car.v) * 16);
+            document.getElementById('readout-car-v').innerText = `${displayCarV} km/h`;
+            document.getElementById('readout-box-v').innerText = `${displayBoxV} km/h`;
+
+            // Clear Screen
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Ground/Road grid
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 230);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 220, canvas.width, 10);
+
+            // Draw Wall Obstacle
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(wall.x, 100, wall.width, wall.height);
+            // Stripes on wall
+            ctx.fillStyle = '#fef08a';
+            for (let y = 100; y < 100 + wall.height; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(wall.x, y);
+                ctx.lineTo(wall.x + wall.width, y + 10);
+                ctx.lineTo(wall.x + wall.width, y + 20);
+                ctx.lineTo(wall.x, y + 10);
+                ctx.fill();
+            }
+
+            // Draw Car body
+            ctx.fillStyle = '#3b82f6';
+            ctx.beginPath();
+            ctx.roundRect(car.x, car.y, car.width, car.height, 8);
+            ctx.fill();
+
+            // Car Cabin Top
+            ctx.fillStyle = '#1e40af';
+            ctx.beginPath();
+            ctx.roundRect(car.x + 30, car.y - 20, 80, 25, [8, 8, 0, 0]);
+            ctx.fill();
+
+            // Car Windows
+            ctx.fillStyle = '#93c5fd';
+            ctx.fillRect(car.x + 40, car.y - 15, 25, 15);
+            ctx.fillRect(car.x + 75, car.y - 15, 25, 15);
+
+            // Car Wheels
+            ctx.fillStyle = '#0f172a';
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#64748b';
+            // Wheel 1
+            ctx.beginPath();
+            ctx.arc(car.x + 30, car.y + car.height, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Wheel 2
+            ctx.beginPath();
+            ctx.arc(car.x + car.width - 35, car.y + car.height, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw Straps/Gurt if active
+            const isStrapped = document.getElementById('sim-strapped').checked;
+            if (isStrapped && !box.isAirborne) {
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(car.x + box.rx - 5, car.y);
+                ctx.lineTo(car.x + box.rx + box.width / 2, car.y + box.yOffset);
+                ctx.lineTo(car.x + box.rx + box.width + 5, car.y);
+                ctx.stroke();
+            }
+
+            // Draw Box
+            const boxX = box.isAirborne ? box.x : car.x + box.rx;
+            const boxY = box.isAirborne ? box.y : car.y + box.yOffset;
+            ctx.fillStyle = '#f59e0b';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(boxX, boxY, box.width, box.height, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // Box package strap cross line
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(boxX + box.width / 2, boxY);
+            ctx.lineTo(boxX + box.width / 2, boxY + box.height);
+            ctx.moveTo(boxX, boxY + box.height / 2);
+            ctx.lineTo(boxX + box.width, boxY + box.height / 2);
+            ctx.stroke();
+
+            // Render particles
+            particles.forEach((p, idx) => {
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.life--;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                if (p.life <= 0) particles.splice(idx, 1);
+            });
+
+            requestAnimationFrame(updatePhysicsAndDraw);
+        }
+
+        // Start Physics Engine Loop
+        updatePhysicsAndDraw();
+
+
+        // ----------------- DYNAMIC TRAINER -----------------
+        const trainerQuestions = [
+            {
+                q: "Ein Schlitten gleitet kräftefrei auf einer perfekt spiegelglatten, horizontalen Eisfläche. Wie bewegt er sich fort?",
+                a: [
+                    "Er bremst langsam ab und bleibt schließlich stehen.",
+                    "Er gleitet unendlich lange mit absolut konstanter Geschwindigkeit auf geradem Weg weiter.",
+                    "Er beschleunigt von selbst immer weiter, da Trägheit antreibt."
+                ],
+                correct: 1,
+                reason: "Im reibungsfreien Raum bremst ihn keine Kraft ab. Die Trägheit sorgt für die unendliche Erhaltung seines Bewegungszustands."
+            },
+            {
+                q: "Warum sollte man beim Anschnallen im Auto darauf achten, dass der Gurt eng anliegt?",
+                a: [
+                    "Weil man sonst bei einer Vollbremsung aufgrund der Trägheit erst ein Stück weit ungebremst nach vorne fliegt, bevor der Gurt stoppt.",
+                    "Weil ein enger Gurt die Trägheit des Körpers physikalisch komplett aufhebt.",
+                    "Weil der Gurt sonst schmilzt."
+                ],
+                correct: 0,
+                reason: "Der Körper fliegt sonst mit seiner bisherigen Reisegeschwindigkeit ungebremst weiter, bis er schmerzhaft gebremst wird."
+            },
+            {
+                q: "Warum bleibt Geschirr auf dem Tisch stehen, wenn man eine glatte Tischdecke extrem schnell darunter wegzieht?",
+                a: [
+                    "Wegen der Massenträgheit verharrt das Geschirr kurzzeitig in Ruhe; die Reibungskraft wirkt durch das schnelle Ziehen nur extrem kurz.",
+                    "Das Geschirr besitzt bei schnellen Bewegungen kurzzeitig überhaupt keine Masse mehr.",
+                    "Das Ziehen neutralisiert die Schwerkraft."
+                ],
+                correct: 0,
+                reason: "Das Geschirr besitzt Masse und will in Ruhe bleiben. Die Kraft beim Ziehen wirkt nur einen winzigen Moment und reicht nicht aus, um das Geschirr stark mitzubeschleunigen."
+            },
+            {
+                q: "Eine Billardkugel rollt reibungsfrei über den Tisch. Welche resultierende Gesamtkraft wirkt auf sie, während sie gleichmäßig rollt?",
+                a: [
+                    "Eine konstante Antriebskraft nach vorne.",
+                    "Eine resultierende Gesamtkraft von exakt 0 Newton.",
+                    "Nur die Schwerkraft nach unten ohne jede Gegenkraft."
+                ],
+                correct: 1,
+                reason: "Laut Trägheitssatz ändert sich der Bewegungszustand nur durch Kräfte. Gleichmäßige Bewegung bedeutet Kräftegleichgewicht (F_res = 0 N)."
+            },
+            {
+                q: "Ein Radfahrer fährt eine gerade Strecke mit konstant 20 km/h. Warum muss er trotzdem leicht in die Pedale treten?",
+                a: [
+                    "Um die bremsenden Gegenkräfte von Luft- und Rollreibung auszugleichen und das Kräftegleichgewicht (F_res = 0) zu wahren.",
+                    "Um die Trägheit aktiv zu füttern, da diese sonst leerläuft.",
+                    "Um den Motor im Dynamo-Modus am Leben zu halten."
+                ],
+                correct: 0,
+                reason: "Die Muskelkraft gleicht die Reibungskraft aus. Dadurch ist die Gesamtkraft auf das System Null und das Tempo bleibt gleich."
+            },
+            {
+                q: "Eine kleine Münze liegt auf einer Pappkarte auf einem Glas. Schlägt man die Karte schnipsend weg, fällt die Münze ins Glas. Warum?",
+                a: [
+                    "Die Münze wird durch den erzeugten Luftzug nach unten gesaugt.",
+                    "Wegen ihrer Trägheit bleibt die Münze kurz in Ruhe an ihrer Position und fällt dann durch die Schwerkraft senkrecht nach unten ins Glas.",
+                    "Die Karte überträgt elektromagnetische Abstoßungskräfte."
+                ],
+                correct: 1,
+                reason: "Die Münze behält ihren Ruhezustand horizontal bei. Ohne Unterstützung der Karte zieht die Gravitation sie gerade nach unten."
+            }
+        ];
+
+        let trainerState = {
+            currentIdx: 0,
+            score: 0,
+            streak: 0,
+            mult: 1.0,
+            count: 1
+        };
+
+        // Populate Trainer question container dynamically
+        function loadTrainerQuestion() {
+            const index = Math.floor(Math.random() * trainerQuestions.length);
+            trainerState.currentIdx = index;
+            const qData = trainerQuestions[index];
+
+            document.getElementById('trainer-question-box').innerText = qData.q;
+            document.getElementById('trainer-count').innerText = trainerState.count;
+
+            const optionsDiv = document.getElementById('trainer-options');
+            optionsDiv.innerHTML = '';
+
+            // Generate answer buttons
+            qData.a.forEach((ans, i) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs md:text-sm font-medium transition active:scale-[0.98]";
+                btn.onclick = () => selectTrainerAnswer(i);
+                btn.innerHTML = `<span class="inline-block w-6 text-indigo-300 font-bold">${String.fromCharCode(65 + i)})</span> ${ans}`;
+                optionsDiv.appendChild(btn);
+            });
+
+            // Hide feedback and next button
+            document.getElementById('trainer-feedback').className = "hidden";
+            document.getElementById('btn-trainer-next').classList.add('hidden');
+        }
+
+        function selectTrainerAnswer(idx) {
+            const qData = trainerQuestions[trainerState.currentIdx];
+            const feedbackBox = document.getElementById('trainer-feedback');
+            const buttons = document.querySelectorAll('#trainer-options button');
+
+            // Disable further clicks
+            buttons.forEach(btn => btn.disabled = true);
+
+            feedbackBox.classList.remove('hidden');
+
+            if (idx === qData.correct) {
+                trainerState.streak++;
+                trainerState.mult = 1.0 + (trainerState.streak * 0.2); // +20% per streak point
+                const earned = Math.round(10 * trainerState.mult);
+                trainerState.score += earned;
+
+                feedbackBox.className = "text-center text-xs font-bold py-2.5 px-4 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                feedbackBox.innerHTML = `🔥 Richtig! +${earned} Punkte! <br><span class="font-normal text-slate-300">${qData.reason}</span>`;
+                
+                buttons[idx].className = "w-full text-left p-3.5 rounded-xl bg-emerald-600/30 border border-emerald-500 text-xs md:text-sm font-medium transition";
+            } else {
+                trainerState.streak = 0;
+                trainerState.mult = 1.0;
+
+                feedbackBox.className = "text-center text-xs font-bold py-2.5 px-4 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30";
+                feedbackBox.innerHTML = `❌ Falsch gelöst! <br><span class="font-normal text-slate-300">${qData.reason}</span>`;
+
+                buttons[idx].className = "w-full text-left p-3.5 rounded-xl bg-red-600/30 border border-red-500 text-xs md:text-sm font-medium transition";
+                buttons[qData.correct].className = "w-full text-left p-3.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-xs md:text-sm font-medium transition";
+            }
+
+            // Sync scores
+            document.getElementById('trainer-points').innerText = trainerState.score;
+            document.getElementById('trainer-streak').innerText = trainerState.streak;
+            document.getElementById('trainer-mult').innerText = trainerState.mult.toFixed(1) + "x";
+
+            // Reveal Next button
+            document.getElementById('btn-trainer-next').classList.remove('hidden');
+        }
+
+        function nextTrainerQuestion() {
+            trainerState.count++;
+            loadTrainerQuestion();
+        }
+
+        // Initialize Trainer Arena on window load
+        window.onload = function() {
+            loadTrainerQuestion();
+        };
+    </script>
+</body>
+</html>
