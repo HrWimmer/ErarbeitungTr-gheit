@@ -1396,6 +1396,11 @@
             sim.fallingVy = 0;
             sim.mu = friction;
             sim.mass = mass;
+            // Kastengröße skaliert mit Masse (10 kg → 14px, 50 kg → 22px, 100 kg → 32px)
+            const boxSize = Math.round(14 + mass * 0.18);
+            sim.wK = boxSize;
+            sim.hK = boxSize;
+            sim.yK = 135 - boxSize;
             sim.isImpulseActive = false;
             sim.forceTimer = 0;
 
@@ -1625,12 +1630,15 @@
                 const alpha = Math.min(1, sim.forceTimer / 25);
                 ctx.save();
                 ctx.globalAlpha = alpha;
+                // F_Reib skaliert mit Masse: F = mu*m*g (Kraft größer bei mehr Masse,
+                // aber Verzögerung a = mu*g bleibt gleich — Masse kürzt sich heraus)
+                const fReib = 1.5 * (sim.mass / 50);
                 if (sim.forceType === 'brake') {
                     drawVector(sim.xW + sim.wW/2, sim.yW - 10, -8, '#ef4444', 'F_Brems');
-                    drawVector(sim.xK + sim.wK/2, sim.yK - 10, -1.5, '#fb923c', 'F_Reib');
+                    drawVector(sim.xK + sim.wK/2, sim.yK - 10, -fReib, '#fb923c', 'F_Reib');
                 } else if (sim.forceType === 'accel') {
                     drawVector(sim.xW + sim.wW/2, sim.yW - 10, 7, '#4ade80', 'F_Antrieb');
-                    drawVector(sim.xK + sim.wK/2, sim.yK - 10, 1.5, '#fb923c', 'F_Reib');
+                    drawVector(sim.xK + sim.wK/2, sim.yK - 10, fReib, '#fb923c', 'F_Reib');
                 }
                 ctx.restore();
                 sim.forceTimer--;
